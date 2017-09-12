@@ -2,6 +2,7 @@
 #include <fcntl.h>
 #include "unistd.h"
 #include <cstdlib>
+#include <time.h>
 #include "/usr/include/linux/i2c-dev.h"
 
 class DistanceSensor {
@@ -33,13 +34,19 @@ int DistanceSensor::measureDistance() {
     int range = 0;
     char buf[10];
 
+    // 1秒経過するまで待つ
+    time_t start = time(NULL);
+    time_t end = time(NULL);
+    while(end - start < 1)
+        end = time(NULL);
+
     buf[0] = 0x00;
     buf[1] = 0x51;
     if ((write(fd_, buf, 2)) != 2) {
         printf("0xE0 Error send the read command\n");
         exit(1);
     }
-    usleep(70000);   //66000
+    usleep(66000);   //66000
 
     buf[0] = 0x02;
     if ((write(fd_, buf, 1)) != 1) {

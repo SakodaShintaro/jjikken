@@ -47,7 +47,6 @@ public:
 
     //人の顔
     void traceHumanFace();
-    void seeHumanFace();
 
     void approachObject();
 
@@ -136,6 +135,18 @@ void Robot::stopAndTurn(Direction direction) {
 void Robot::loop() {
     std::cout << "loop開始" << std::endl;
     std::cout << "コマンドを入力してください" << std::endl;
+    printf("p : speedUp\n");
+    printf("q : speedDown\n");
+    printf("f : goForward\n");
+    printf("b : goBack\n");
+    printf("r : curveRight\n");
+    printf("l : curveLeft\n");
+    printf("R : turnRight\n");
+    printf("L : turnLeft\n");
+    printf("s : stop\n");
+    printf("a : traceHumanFace\n");
+    printf("o : approachObject\n");
+    printf("h : help\n");
     char c;
     while (std::cin >> c) {
         switch (c) {
@@ -230,16 +241,15 @@ void Robot::traceHumanFace() {
 }
 
 void Robot::approachObject() {
-    static const int threshold = 20;
+    static const int threshold = 50;
     while (true) {
-        sleep(1);
-        if (ds_.measureDistance() >= 1000) {
-            stop();
-            continue;
-        }
-        if (ds_.measureDistance() >= threshold) {
+        auto distance = ds_.measureDistance();
+        if (distance >= threshold && distance <= 1000) {
             run(FORWARD);
         } else {
+            while (ds_.measureDistance() < threshold) {
+                stopAndTurn(LEFT);
+            }
             stop();
         }
     }

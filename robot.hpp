@@ -2,6 +2,7 @@
 #include"wheel.hpp"
 #include"camera.hpp"
 #include"distance_sensor.hpp"
+#include"arm.hpp"
 #include<cassert>
 #include<cstdio>
 #include<vector>
@@ -59,7 +60,7 @@ private:
     static const int default_speed = 10000;
 
     //(1)-b アーム
-    //Arm arm_;
+    Arm arm_;
 
     //(1)-c マイクも必要か
 
@@ -135,18 +136,23 @@ void Robot::stopAndTurn(Direction direction) {
 void Robot::loop() {
     std::cout << "loop開始" << std::endl;
     std::cout << "コマンドを入力してください" << std::endl;
-    printf("p : speedUp\n");
-    printf("q : speedDown\n");
-    printf("f : goForward\n");
-    printf("b : goBack\n");
-    printf("r : curveRight\n");
-    printf("l : curveLeft\n");
-    printf("R : turnRight\n");
-    printf("L : turnLeft\n");
-    printf("s : stop\n");
-    printf("a : traceHumanFace\n");
-    printf("o : approachObject\n");
-    printf("h : help\n");
+    auto printHelp = [&](){
+        printf("p : speedUp\n");
+        printf("q : speedDown\n");
+        printf("f : goForward\n");
+        printf("b : goBack\n");
+        printf("r : curveRight\n");
+        printf("l : curveLeft\n");
+        printf("R : turnRight\n");
+        printf("L : turnLeft\n");
+        printf("s : stop\n");
+        printf("a : traceHumanFace\n");
+        printf("d : approachObject\n");
+        printf("h : help\n");
+        printf("o : openFinger\n");
+        printf("c : closeFinger\n");
+    };
+    printHelp();
     char c;
     while (std::cin >> c) {
         switch (c) {
@@ -180,21 +186,17 @@ void Robot::loop() {
         case 'a':
             traceHumanFace();
             break;
-        case 'o':
+        case 'd':
             approachObject();
             break;
+        case 'o':
+            arm_.openFinger();
+            break;
+        case 'c':
+            arm_.closeFinger();
+            break;
         case 'h':
-            printf("p : speedUp\n");
-            printf("q : speedDown\n");
-            printf("f : goForward\n");
-            printf("b : goBack\n");
-            printf("r : curveRight\n");
-            printf("l : curveLeft\n");
-            printf("R : turnRight\n");
-            printf("L : turnLeft\n");
-            printf("s : stop\n");
-            printf("a : traceHumanFace\n");
-            printf("o : approachObject\n");
+            printHelp();
             break;
         case 'x':
             return;

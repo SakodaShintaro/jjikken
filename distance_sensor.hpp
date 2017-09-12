@@ -39,7 +39,7 @@ int DistanceSensor::measureDistance() {
         printf("0xE0 Error send the read command\n");
         exit(1);
     }
-    usleep(66000);
+    usleep(70000);   //66000
 
     buf[0] = 0x02;
     if ((write(fd_, buf, 1)) != 1) {

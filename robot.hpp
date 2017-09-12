@@ -232,11 +232,15 @@ void Robot::traceHumanFace() {
 void Robot::approachObject() {
     static const int threshold = 20;
     while (true) {
+        sleep(1);
+        if (ds_.measureDistance() >= 1000) {
+            stop();
+            continue;
+        }
         if (ds_.measureDistance() >= threshold) {
             run(FORWARD);
         } else {
             stop();
         }
-        sleep(1);
     }
 }

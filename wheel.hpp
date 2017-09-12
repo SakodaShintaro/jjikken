@@ -45,6 +45,7 @@ private:
 
 void Wheel::sendRunSignal() {
     // 方向検出
+    speed_ *= (channel_ == 1 ? -1 : 1);
     unsigned short dir = (speed_ < 0 ? 0x50 : 0x51);
 
     //スピードを絶対値に直す
@@ -94,6 +95,10 @@ void Wheel::gradualStop() {
 Wheel::Wheel(bool isRightWheel) {
     //チャンネルの設定と,モーターのもろもろの設定をやるっぽい
     channel_ =(isRightWheel ? 1 : 0);
+
+    if (wiringPiSPISetup(channel_, 1000000) < 0){
+        printf("SPI Setup failed:\n");
+    }
 
     // MAX_SPEED設定。
     /// レジスタアドレス。

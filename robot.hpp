@@ -1,10 +1,14 @@
 //ロボットの動作を管理するクラス
 #include"wheel.hpp"
+#include"camera.hpp"
+#include"distance_sensor.hpp"
 #include<cassert>
 #include<cstdio>
 #include<vector>
 #include<thread>
-#include"opencv2/opencv.hpp"
+#include <fcntl.h>
+#include <stdlib.h> 
+#include "/usr/include/linux/i2c-dev.h"
 
 class Robot {
 public:
@@ -47,9 +51,6 @@ public:
 
     void approachObject();
 
-    //センチ単位で距離を返す
-    int measureDistance();
-
 private:
     //(1)出力類
     //(1)-a 左右のホイール
@@ -67,12 +68,13 @@ private:
     //(2)-a カメラ
     //openCVを使うはず
     //うーん、どういう設計になるのかうまく想像できてない……
-    bool isThereFace_;
+    Camera camera_;
 
     //(2)-b マイク
 
     //(2)-c センサ類
     //超音波距離センサ?
+    DistanceSensor ds_;
 };
 
 void Robot::run(Direction direction, int speed) {
@@ -107,8 +109,8 @@ void Robot::run(Direction direction, int speed) {
 
 void Robot::stop() {
     std::cout << "停止" << std::endl;
-    right_wheel_.gradualStop();
-    left_wheel_.gradualStop();
+    right_wheel_.emergencyStop();
+    left_wheel_.emergencyStop();
 }
 
 void Robot::stopAndTurn(Direction direction) {
@@ -167,7 +169,7 @@ void Robot::loop() {
         case 'a':
             traceHumanFace();
             break;
-        case 'b':
+        case 'o':
             approachObject();
             break;
         case 'h':
@@ -181,7 +183,7 @@ void Robot::loop() {
             printf("L : turnLeft\n");
             printf("s : stop\n");
             printf("a : traceHumanFace\n");
-            printf("b : approachObject\n");
+            printf("o : approachObject\n");
             break;
         case 'x':
             return;
@@ -218,72 +220,23 @@ void Robot::curve(Direction direction) {
 }
 
 void Robot::traceHumanFace() {
-    std::thread see(&Robot::seeHumanFace, this);
     while (true) {
-        if (isThereFace_) {
+        if (camera_.detectHumanFace()) {
             run(FORWARD);
         } else {
             stop();
         }
-    }
-}
-
-void Robot::seeHumanFace() {
-    cv::Mat im, gray;                    // 変数宣言
-
-    // カスケード分類器の取得
-    cv::CascadeClassifier cascade;
-
-    if (!cascade.load("/usr/share/opencv/haarcascades/haarcascade_frontalface_alt.xml")) {
-        return;
-    }
-
-    std::vector<cv::Rect> faces;
-    cv::VideoCapture cap(0);            // カメラのキャプチャ
-
-    if (!cap.isOpened()) {
-        return;    // キャプチャのエラー処理
-    }
-
-    cap.set( CV_CAP_PROP_FRAME_WIDTH,  160 );
-    cap.set( CV_CAP_PROP_FRAME_HEIGHT, 120 );
-
-    while (true) {
-        cap >> im;                            // カメラ映像の取得
-
-        cv::cvtColor(im, gray, CV_RGB2GRAY);    // グレースケール変換
-
-        // カスケード分類器で顔の探索
-        cascade.detectMultiScale(gray, faces, 1.2, 2, CV_HAAR_SCALE_IMAGE, cv::Size(20, 20));
-
-        // 顔領域を矩形で囲む
-        if (!faces.empty()) {
-            isThereFace_ = true;
-        } else {
-            isThereFace_ = false;
-        }
-        std::vector<cv::Rect>::const_iterator r = faces.begin( );
-        for ( ; r != faces.end( ); ++r ) {
-            cv::rectangle(im, cv::Point( r->x, r->y ), cv::Point(r->x + r->width, r->y + r->height), cv::Scalar(20, 20, 200), 3, CV_AA);
-        }
-
-        cv::imshow("Camera", im);                // 映像の表示
-        if (cv::waitKey( 30 ) >= 0)
-            break;                               // キー入力があれば終了
     }
 }
 
 void Robot::approachObject() {
     static const int threshold = 20;
     while (true) {
-        if (measureDistance() >= threshold) {
+        if (ds_.measureDistance() >= threshold) {
             run(FORWARD);
         } else {
             stop();
         }
+        sleep(1);
     }
-}
-
-int Robot::measureDistance() {
-
 }

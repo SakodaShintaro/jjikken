@@ -1,17 +1,26 @@
-#include <wiringPi.h>
-#include <wiringPiSPI.h>
+//手元にはwiringPiなんてないからコメントアウトしておく
+//#include <wiringPi.h>
+//#include <wiringPiSPI.h>
+#include<cstdlib>
+#include<iostream>
 
-//ホイールに繋がっているモーターを制御するクラス
+//手元の環境でコンパイル通すためにダミーを作っておく
+void wiringPiSPIDataRW(int, int, int) {
+    std::cout << "モーターへ書き込み" << std::endl;
+}
+
+//ホイールを制御するクラス
 //RightとLeftの二つインスタンスを生成することを想定
-//Motorクラスを作って、直接的なやりとりはモーターに任せるのが適切に思える……
+//Motorクラスを作って、モーターの直接的な操作はMotorクラスに任せるのが適切に思える……
 class Wheel {
 public:
+    //bool型入れてるのちょっと美しくないですかね
     Wheel(bool isRightWheel);
 
+    //名前が変な気がする(wheel自体は走っていることを意識しない、回るだけ)
     void run(int speed);
 
     void speedUp();
-
     void speedDown();
 
     //緊急停止
@@ -29,7 +38,7 @@ private:
     int speed_;
 
     //速度を変化させる際の単位量
-    static int unit_speed;
+    static const int unit_speed = 10000;
 
     //信号を送る
     void sendRunSignal() const;
@@ -49,11 +58,11 @@ void Wheel::sendRunSignal() const {
     spd_l = (unsigned char)(0x00FF & spd);
 
     // コマンド（レジスタアドレス）送信。
-    L6470_write(dir);
+    wiringPiSPIDataRW(channel_, dir, 1);
     // データ送信。
-    L6470_write(spd_h);
-    L6470_write(spd_m);
-    L6470_write(spd_l);
+    wiringPiSPIDataRW(channel_, spd_h, 1);
+    wiringPiSPIDataRW(channel_, spd_m, 1);
+    wiringPiSPIDataRW(channel_, spd_l, 1);
 }
 
 void Wheel::run(int speed) {
@@ -85,14 +94,14 @@ void Wheel::gradualStop() {
 
 Wheel::Wheel(bool isRightWheel) {
     //チャンネルの設定と,モーターのもろもろの設定をやるっぽい
-    channel =(isRightWheel ? 1 : 0);
+    channel_ =(isRightWheel ? 1 : 0);
 
     // MAX_SPEED設定。
     /// レジスタアドレス。
     wiringPiSPIDataRW(channel_, 0x07, 1);
     // 最大回転スピード値(10bit) 初期値は 0x41
     wiringPiSPIDataRW(channel_, 0x00, 1);
-    wiringPiSPIDataRW(channel_, 0x25  1);
+    wiringPiSPIDataRW(channel_, 0x25, 1);
 
     // KVAL_HOLD設定。
     /// レジスタアドレス。
@@ -140,5 +149,5 @@ Wheel::Wheel(bool isRightWheel) {
     wiringPiSPIDataRW(channel_, 0x10, 1);
     wiringPiSPIDataRW(channel_, 0x29, 1);
 
-    speed_ = 0:
+    speed_ = 0;
 }

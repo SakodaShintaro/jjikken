@@ -32,6 +32,8 @@ public:
 
     //たぶんループが必要
     //画像,音声,センサ入力とかを監視して、それに対して適切な動作をホイールもしくはアームに送る
+    //というか、そういうアプリを呼び出すということになるのかなぁ
+    //Robotクラスが膨らみそう
     //今はコマンド入力を待つだけ～
     void loop();
 
@@ -60,20 +62,24 @@ private:
 void Robot::run(Direction direction, int speed) {
     switch (direction) {
     case FORWARD:
+        std::cout << "前進" << std::endl;
         right_wheel_.run(speed);
         left_wheel_.run(speed);
         break;
     case BACK:
+        std::cout << "後進" << std::endl;
         right_wheel_.run(-speed);
         left_wheel_.run(-speed);
         break;
     case RIGHT:
         //右を向いてから前進
+        std::cout << "右を向いてから前進" << std::endl;
         stopAndTurn(RIGHT);
         run(FORWARD, speed);
         break;
     case LEFT:
         //左を向いてから前進
+        std::cout << "左を向いてから前進" << std::endl;
         stopAndTurn(LEFT);
         run(FORWARD, speed);
         break;
@@ -84,6 +90,7 @@ void Robot::run(Direction direction, int speed) {
 }
 
 void Robot::stop() {
+    std::cout << "停止" << std::endl;
     right_wheel_.gradualStop();
     left_wheel_.gradualStop();
 }
@@ -91,11 +98,13 @@ void Robot::stop() {
 void Robot::stopAndTurn(Direction direction) {
     switch (direction) {
     case RIGHT:
+        std::cout << "右を向く" << std::endl;
         right_wheel_.run(-default_speed / 2);
         left_wheel_.run(+default_speed / 2);
         //どれくらい回ったら止まるかも判断したけど……
         break;
     case LEFT:
+        std::cout << "左を向く" << std::endl;
         right_wheel_.run(+default_speed / 2);
         left_wheel_.run(-default_speed / 2);
         //どれくらい回ったら止まるかも判断したけど……
@@ -139,6 +148,8 @@ void Robot::loop() {
         case 's':
             stop();
             break;
+        case 'x':
+            return;
         default:
             std::cout << "不正な入力" << std::endl;
         }
@@ -158,9 +169,11 @@ void Robot::speedDown() {
 void Robot::curve(Direction direction) {
     switch (direction) {
     case RIGHT:
+        std::cout << "右に曲がる" << std::endl;
         left_wheel_.speedUp();
         break;
     case LEFT:
+        std::cout << "左に曲がる" << std::endl;
         right_wheel_.speedUp();
         break;
     default:

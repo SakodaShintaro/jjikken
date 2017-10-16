@@ -45,6 +45,11 @@ public:
     void traceHumanFace();
     void seeHumanFace();
 
+    void approachObject();
+
+    //センチ単位で距離を返す
+    int measureDistance();
+
 private:
     //(1)出力類
     //(1)-a 左右のホイール
@@ -57,7 +62,6 @@ private:
     //Arm arm_;
 
     //(1)-c マイクも必要か
-
 
     //(2)入力類
     //(2)-a カメラ
@@ -163,6 +167,9 @@ void Robot::loop() {
         case 'a':
             traceHumanFace();
             break;
+        case 'b':
+            approachObject();
+            break;
         case 'h':
             printf("p : speedUp\n");
             printf("q : speedDown\n");
@@ -174,6 +181,7 @@ void Robot::loop() {
             printf("L : turnLeft\n");
             printf("s : stop\n");
             printf("a : traceHumanFace\n");
+            printf("b : approachObject\n");
             break;
         case 'x':
             return;
@@ -251,14 +259,31 @@ void Robot::seeHumanFace() {
         // 顔領域を矩形で囲む
         if (!faces.empty()) {
             isThereFace_ = true;
+        } else {
+            isThereFace_ = false;
         }
-        //vector<Rect>::const_iterator r = faces.begin( );
-        //for ( ; r != faces.end( ); ++r ) {
-        //  rectangle( im, Point( r->x, r->y ), Point(r->x + r->width, r->y + r->height), Scalar(20, 20, 200), 3, CV_AA);
-        //}
+        std::vector<cv::Rect>::const_iterator r = faces.begin( );
+        for ( ; r != faces.end( ); ++r ) {
+            cv::rectangle(im, cv::Point( r->x, r->y ), cv::Point(r->x + r->width, r->y + r->height), cv::Scalar(20, 20, 200), 3, CV_AA);
+        }
 
-        //imshow( "Camera", im );                // 映像の表示
+        cv::imshow("Camera", im);                // 映像の表示
         if (cv::waitKey( 30 ) >= 0)
             break;                               // キー入力があれば終了
     }
+}
+
+void Robot::approachObject() {
+    static const int threshold = 20;
+    while (true) {
+        if (measureDistance() >= threshold) {
+            run(FORWARD);
+        } else {
+            stop();
+        }
+    }
+}
+
+int Robot::measureDistance() {
+
 }

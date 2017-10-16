@@ -4,9 +4,10 @@
 
 CC		= g++
 CFLAGS		= -std=c++14 -O4 -Wall -I/usr/local/include
-CPPFLAGS		= -std=c++14 -O4 -Wall -I/usr/local/include
+CPPFLAGS	= -std=c++14 -O4 -Wall -I/usr/local/include
 DEST		= /usr/local/bin
-LDFLAGS		= -L/usr/local/lib -lwiringPi
+#LDFLAGS		= -L/usr/local/lib -lwiringPi -pthread
+LDFLAGS		= -lwiringPi -pthread
 LIBS		= -lm `pkg-config --libs opencv`
 OBJS		= main.o
 PROGRAM		= robot

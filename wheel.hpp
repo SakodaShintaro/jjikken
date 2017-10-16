@@ -1,11 +1,8 @@
 //手元にはwiringPiなんてないからコメントアウトしておく
-//#include <wiringPi.h>
-//#include <wiringPiSPI.h>
 #include<cstdlib>
 #include<iostream>
 #include <wiringPi.h>
 #include <wiringPiSPI.h>
-
 
 //ホイールを制御するクラス
 //RightとLeftの二つインスタンスを生成することを想定
@@ -39,10 +36,14 @@ private:
     static const int unit_speed = 10000;
 
     //信号を送る
-    void sendRunSignal() const;
+    void sendRunSignal();
+
+    void write(unsigned char data) {
+        wiringPiSPIDataRW(channel_, &data, 1);
+    }
 };
 
-void Wheel::sendRunSignal() const {
+void Wheel::sendRunSignal() {
     // 方向検出
     unsigned short dir = (speed_ < 0 ? 0x50 : 0x51);
 
@@ -56,11 +57,11 @@ void Wheel::sendRunSignal() const {
     spd_l = (unsigned char)(0x00FF & spd);
 
     // コマンド（レジスタアドレス）送信。
-    wiringPiSPIDataRW(channel_, dir, 1);
+    write(dir);
     // データ送信。
-    wiringPiSPIDataRW(channel_, spd_h, 1);
-    wiringPiSPIDataRW(channel_, spd_m, 1);
-    wiringPiSPIDataRW(channel_, spd_l, 1);
+    write(spd_h);
+    write(spd_m);
+    write(spd_l);
 }
 
 void Wheel::run(int speed) {
@@ -96,56 +97,56 @@ Wheel::Wheel(bool isRightWheel) {
 
     // MAX_SPEED設定。
     /// レジスタアドレス。
-    wiringPiSPIDataRW(channel_, 0x07, 1uc);
+    write(0x07);
     // 最大回転スピード値(10bit) 初期値は 0x41
-    wiringPiSPIDataRW(channel_, 0x00, 1);
-    wiringPiSPIDataRW(channel_, 0x25, 1);
+    write(0x00);
+    write(0x25);
 
     // KVAL_HOLD設定。
     /// レジスタアドレス。
-    wiringPiSPIDataRW(channel_, 0x09, 1);
+    write(0x09);
     // モータ停止中の電圧設定(8bit)
-    wiringPiSPIDataRW(channel_, 0xFF, 1);
+    write(0xFF);
 
     // KVAL_RUN設定。
     /// レジスタアドレス。
-    wiringPiSPIDataRW(channel_, 0x0A, 1);
+    write(0x0A);
     // モータ定速回転中の電圧設定(8bit)
-    wiringPiSPIDataRW(channel_, 0xFF, 1);
+    write(0xFF);
 
     // KVAL_ACC設定。
     /// レジスタアドレス。
-    wiringPiSPIDataRW(channel_, 0x0B, 1);
+    write(0x0B);
     // モータ加速中の電圧設定(8bit)
-    wiringPiSPIDataRW(channel_, 0xFF, 1);
+    write(0xFF);
 
     // KVAL_DEC設定。
     /// レジスタアドレス。
-    wiringPiSPIDataRW(channel_, 0x0C, 1);
+    write(0x0C);
     // モータ減速中の電圧設定(8bit) 初期値は 0x8A
-    wiringPiSPIDataRW(channel_, 0x40, 1);
+    write(0x40);
 
     // OCD_TH設定。
     /// レジスタアドレス。
-    wiringPiSPIDataRW(channel_, 0x13, 1);
+    write(0x13);
     // オーバーカレントスレッショルド設定(4bit)
-    wiringPiSPIDataRW(channel_, 0x0F, 1);
+    write(0x0F);
 
     // STALL_TH設定。
     /// レジスタアドレス。
-    wiringPiSPIDataRW(channel_, 0x14, 1);
+    write(0x14);
     // ストール電流スレッショルド設定(4bit)
-    wiringPiSPIDataRW(channel_, 0x7F, 1);
+    write(0x7F);
 
     //start slopeデフォルト
     /// レジスタアドレス。
-    wiringPiSPIDataRW(channel_, 0x0e, 1);
-    wiringPiSPIDataRW(channel_, 0x00, 1);
+    write(0x0e);
+    write(0x00);
 
     //デセラレーション設定
     /// レジスタアドレス。
-    wiringPiSPIDataRW(channel_, 0x10, 1);
-    wiringPiSPIDataRW(channel_, 0x29, 1);
+    write(0x10);
+    write(0x29);
 
     speed_ = 0;
 }

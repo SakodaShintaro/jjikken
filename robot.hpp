@@ -1,6 +1,10 @@
 //ロボットの動作を管理するクラス
 #include"wheel.hpp"
 #include<cassert>
+#include<cstdio>
+#include<vector>
+#include<thread>
+#include"opencv2/opencv.hpp"
 
 class Robot {
 public:
@@ -38,6 +42,10 @@ public:
     //今はコマンド入力を待つだけ～
     void loop();
 
+    //人の顔
+    void traceHumanFace();
+    void seeHumanFace();
+
 private:
     //(1)出力類
     //(1)-a 左右のホイール
@@ -56,6 +64,7 @@ private:
     //(2)-a カメラ
     //openCVを使うはず
     //うーん、どういう設計になるのかうまく想像できてない……
+    bool isThereFace_;
 
     //(2)-b マイク
 
@@ -151,6 +160,21 @@ void Robot::loop() {
         case 's':
             stop();
             break;
+        case 'a':
+            traceHumanFace();
+            break;
+        case 'h':
+            printf("p : speedUp\n");
+            printf("q : speedDown\n");
+            printf("f : goForward\n");
+            printf("b : goBack\n");
+            printf("r : curveRight\n");
+            printf("l : curveLeft\n");
+            printf("R : turnRight\n");
+            printf("L : turnLeft\n");
+            printf("s : stop\n");
+            printf("a : traceHumanFace\n");
+            break;
         case 'x':
             return;
         default:
@@ -182,5 +206,59 @@ void Robot::curve(Direction direction) {
     default:
         //ここには来ないはず
         assert(false);
+    }
+}
+
+void Robot::traceHumanFace() {
+    std::thread see(&Robot::seeHumanFace, this);
+    while (true) {
+        if (isThereFace_) {
+            run(FORWARD);
+        } else {
+            stop();
+        }
+    }
+}
+
+void Robot::seeHumanFace() {
+    cv::Mat im, gray;                    // 変数宣言
+
+    // カスケード分類器の取得
+    cv::CascadeClassifier cascade;
+
+    if (!cascade.load("/usr/share/opencv/haarcascades/haarcascade_frontalface_alt.xml")) {
+        return;
+    }
+
+    std::vector<cv::Rect> faces;
+    cv::VideoCapture cap(0);            // カメラのキャプチャ
+
+    if (!cap.isOpened()) {
+        return;    // キャプチャのエラー処理
+    }
+
+    cap.set( CV_CAP_PROP_FRAME_WIDTH,  160 );
+    cap.set( CV_CAP_PROP_FRAME_HEIGHT, 120 );
+
+    while (true) {
+        cap >> im;                            // カメラ映像の取得
+
+        cv::cvtColor(im, gray, CV_RGB2GRAY);    // グレースケール変換
+
+        // カスケード分類器で顔の探索
+        cascade.detectMultiScale(gray, faces, 1.2, 2, CV_HAAR_SCALE_IMAGE, cv::Size(20, 20));
+
+        // 顔領域を矩形で囲む
+        if (!faces.empty()) {
+            isThereFace_ = true;
+        }
+        //vector<Rect>::const_iterator r = faces.begin( );
+        //for ( ; r != faces.end( ); ++r ) {
+        //  rectangle( im, Point( r->x, r->y ), Point(r->x + r->width, r->y + r->height), Scalar(20, 20, 200), 3, CV_AA);
+        //}
+
+        //imshow( "Camera", im );                // 映像の表示
+        if (cv::waitKey( 30 ) >= 0)
+            break;                               // キー入力があれば終了
     }
 }

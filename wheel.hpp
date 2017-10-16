@@ -3,11 +3,9 @@
 //#include <wiringPiSPI.h>
 #include<cstdlib>
 #include<iostream>
+#include <wiringPi.h>
+#include <wiringPiSPI.h>
 
-//手元の環境でコンパイル通すためにダミーを作っておく
-void wiringPiSPIDataRW(int, int, int) {
-    std::cout << "モーターへ書き込み" << std::endl;
-}
 
 //ホイールを制御するクラス
 //RightとLeftの二つインスタンスを生成することを想定
@@ -98,7 +96,7 @@ Wheel::Wheel(bool isRightWheel) {
 
     // MAX_SPEED設定。
     /// レジスタアドレス。
-    wiringPiSPIDataRW(channel_, 0x07, 1);
+    wiringPiSPIDataRW(channel_, 0x07, 1uc);
     // 最大回転スピード値(10bit) 初期値は 0x41
     wiringPiSPIDataRW(channel_, 0x00, 1);
     wiringPiSPIDataRW(channel_, 0x25, 1);

@@ -34,7 +34,6 @@ public:
     void speedUp();
     void speedDown();
 
-
     //たぶんループが必要
     //画像,音声,センサ入力とかを監視して、それに対して適切な動作をホイールもしくはアームに送る
     //というか、そういうアプリを呼び出すということになるのかなぁ
@@ -69,6 +68,7 @@ private:
     //(2)-b マイク
 
     //(2)-c センサ類
+    //超音波距離センサ?
 };
 
 void Robot::run(Direction direction, int speed) {

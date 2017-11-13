@@ -30,6 +30,7 @@ public:
 
     //90度,180度方向転換するイメージだけど、角度はどうやって測るのか
     void stopAndTurn(Direction direction);
+    void turn(int speed);
     
     //前に進んでいる状態で呼び出す想定
     //方向転換ではなく曲がりながら進む
@@ -79,6 +80,12 @@ private:
     //(2)-c センサ類
     //超音波距離センサ?
     DistanceSensor ds_;
+
+    //今何かアプリケーションを実行中かどうか
+    bool is_running_;
+
+    //今何かアプリケーションを実行中だとして、それを中断するシグナル
+    bool stop_signal_;
 };
 
 void Robot::run(Direction direction, int speed) {
@@ -134,6 +141,20 @@ void Robot::stopAndTurn(Direction direction) {
     default:
         //ここには来ないはず
         assert(false);
+    }
+}
+
+void Robot::turn(int speed) {
+    if (speed >= 0) {
+        //speedが正なら右を向く
+        std::cout << "右を向く" << std::endl;
+        right_wheel_.run(speed);
+        left_wheel_.run(speed);
+    } else {
+        //speedが負なら左を向く
+        std::cout << "左を向く" << std::endl;
+        right_wheel_.run(-speed);
+        left_wheel_.run(-speed);
     }
 }
 
@@ -204,24 +225,14 @@ void Robot::loop() {
             printHelp();
             break;
         case 'w':
-            {
-                std::cout << "start show" << std::endl;
-                showNowView();
-                //std::thread t(&Robot::showNowView, this);
-                //std::string s;
-                //while (std::cin >> s) {
-                //    if (s == "stop") {
-                //        break;
-                //    }
-                //}
-                //t.join();
-                std::cout << "end show" << std::endl;
-            }
+            std::cout << "start show" << std::endl;
+            showNowView();
+            std::cout << "end show" << std::endl;
             break;
         case 'x':
             return;
         default:
-            std::cout << "不正な入力" << std::endl;
+            std::cerr << "不正な入力" << std::endl;
         }
     }
 }
@@ -253,9 +264,17 @@ void Robot::curve(Direction direction) {
 }
 
 void Robot::traceHumanFace() {
+    static const int A = 1;
     while (true) {
-        if (camera_.detectHumanFace()) {
-            run(FORWARD);
+        int distance_from_center;
+        if (camera_.detectHumanFace(distance_from_center)) {
+            while (camera_.detectHumanFace(distance_from_center) && distance_from_center >= 10) {
+                std::cout << "distance_from_center = " << distance_from_center << std::endl;
+                int rotate_speed = distance_from_center * A;
+                std::cout << "rotate_speed = " << rotate_speed << std::endl;
+                std::cin >> rotate_speed;
+                turn(rotate_speed);
+            }
         } else {
             stop();
         }

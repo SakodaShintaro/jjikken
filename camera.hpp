@@ -4,7 +4,7 @@
 class Camera{
 public:
     Camera();
-    bool detectHumanFace();
+    bool detectHumanFace(int& distance_from_center);
     void show();
 private:
     cv::VideoCapture cap_;
@@ -17,11 +17,11 @@ Camera::Camera() {
         return;    // キャプチャのエラー処理
     }
 
-    cap_.set( CV_CAP_PROP_FRAME_WIDTH,  160 );
-    cap_.set( CV_CAP_PROP_FRAME_HEIGHT, 120 );
+    cap_.set(CV_CAP_PROP_FRAME_WIDTH,  160);
+    cap_.set(CV_CAP_PROP_FRAME_HEIGHT, 120);
 }
 
-bool Camera::detectHumanFace() {
+bool Camera::detectHumanFace(int& distance_from_center) {
     cv::Mat im, gray;                    // 変数宣言
 
     // カスケード分類器の取得
@@ -39,6 +39,12 @@ bool Camera::detectHumanFace() {
 
     // カスケード分類器で顔の探索
     cascade.detectMultiScale(gray, faces, 1.2, 2, CV_HAAR_SCALE_IMAGE, cv::Size(20, 20));
+
+    if (faces.size() != 1) {
+        distance_from_center = 0;
+    } else {
+        distance_from_center = faces[0].x;
+    }
 
     // 顔領域を矩形で囲む
     //std::vector<cv::Rect>::const_iterator r = faces.begin( );

@@ -51,6 +51,10 @@ public:
 
     void approachObject();
 
+    void showNowView() {
+        camera_.show();
+    }
+
 private:
     //(1)出力類
     //(1)-a 左右のホイール
@@ -151,6 +155,7 @@ void Robot::loop() {
         printf("h : help\n");
         printf("o : openFinger\n");
         printf("c : closeFinger\n");
+        printf("w : show now view\n");
     };
     printHelp();
     char c;
@@ -197,6 +202,21 @@ void Robot::loop() {
             break;
         case 'h':
             printHelp();
+            break;
+        case 'w':
+            {
+                std::cout << "start show" << std::endl;
+                showNowView();
+                //std::thread t(&Robot::showNowView, this);
+                //std::string s;
+                //while (std::cin >> s) {
+                //    if (s == "stop") {
+                //        break;
+                //    }
+                //}
+                //t.join();
+                std::cout << "end show" << std::endl;
+            }
             break;
         case 'x':
             return;

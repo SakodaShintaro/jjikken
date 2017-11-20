@@ -13,10 +13,13 @@ public:
     ~Arm();
     void closeFinger();
     void openFinger();
+    void twistWrist();
+    void downElbow();
+    void upElbow();
+    void downShoulder();
+    void upShoulder();
 private:
-    int pin_for_finger_;
-    char *python_script_;
-    PyObject* main_;
+    int finger_pin_ = 35, wrist_pin_ = 33, elbow_pin_ = 32, shoulder_pin_ = 12;
     PyObject* func_;
 };
 

@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 import RPi.GPIO as GPIO
@@ -12,13 +12,12 @@ def exit_handler(signal, frame):
     GPIO.cleanup()
     sys.exit(0)
 
-upperbound = 12
+upperbound = 11
 lowerbound = 2.5
 width = upperbound - lowerbound
 center = (upperbound + lowerbound) / 2
 
 def move(pin_number, angle):
-    signal.signal(signal.SIGINT, exit_handler)
     GPIO.setmode(GPIO.BOARD)
     GPIO.setup(pin_number, GPIO.OUT)
     servo = GPIO.PWM(pin_number, 50)
@@ -30,7 +29,6 @@ def move(pin_number, angle):
     GPIO.cleanup()
 
 def move2(pin_number, cycle):
-    signal.signal(signal.SIGINT, exit_handler)
     GPIO.setmode(GPIO.BOARD)
     GPIO.setup(pin_number, GPIO.OUT)
     servo = GPIO.PWM(pin_number, 50)
@@ -39,8 +37,10 @@ def move2(pin_number, cycle):
     time.sleep(0.5)
     GPIO.cleanup()
 
-#move2(33, 8)
-#time.sleep(0.5)
-#move2(33, 6)
-#time.sleep(0.5)
-#GPIO.cleanup()
+if __name__ == "__main__":
+    signal.signal(signal.SIGINT, exit_handler)
+    move2(35, 8)
+    time.sleep(0.5)
+    move2(35, 6)
+    time.sleep(0.5)
+    GPIO.cleanup()

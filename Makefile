@@ -9,7 +9,8 @@ DEST		= /usr/local/bin
 #LDFLAGS		= -L/usr/local/lib -lwiringPi -pthread
 LDFLAGS		= -lwiringPi -pthread $$(python3-config --ldflags)
 LIBS		= -lm `pkg-config --libs opencv`
-OBJS		= main.o
+SRCS        = $(wildcard *.cpp)
+OBJS		= $(SRCS:.cpp=.o)
 PROGRAM		= robot
 
 all:		$(PROGRAM)

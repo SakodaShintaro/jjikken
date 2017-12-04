@@ -74,76 +74,87 @@ void Robot::loop() {
     std::cout << "loop開始" << std::endl;
     std::cout << "コマンドを入力してください" << std::endl;
     auto printHelp = [&](){
-        printf("p : speedUp\n");
-        printf("q : speedDown\n");
-        printf("f : goForward\n");
-        printf("b : goBack\n");
-        printf("r : curveRight\n");
-        printf("l : curveLeft\n");
-        printf("R : turnRight\n");
-        printf("L : turnLeft\n");
-        printf("s : stop\n");
-        printf("a : traceHumanFace\n");
-        printf("d : approachObject\n");
-        printf("h : help\n");
-        printf("o : openFinger\n");
-        printf("c : closeFinger\n");
-        printf("w : show now view\n");
+        printf("help\n");
+        printf("speedUp\n");
+        printf("speedDown\n");
+        printf("goForward\n");
+        printf("goBack\n");
+        printf("curveRight\n");
+        printf("curveLeft\n");
+        printf("turnRight\n");
+        printf("turnLeft\n");
+        printf("stop\n");
+        printf("stopAndTurnRight\n");
+        printf("stopAndTurnLeft\n");
+        printf("traceHumanFace\n");
+        printf("approachObject\n");
+        printf("showNowView\n");
+        printf("openFinger\n");
+        printf("closeFinger\n");
+        printf("twistWrist\n");
+        printf("returnWrist\n");
+        printf("downElbow\n");
+        printf("upElbow\n");
+        printf("downShoulder\n");
+        printf("upShoulder\n");
     };
     printHelp();
-    char c;
-    while (std::cin >> c) {
-        switch (c) {
-        case 'p':
+    std::string s;
+    while (std::cin >> s) {
+        stop_signal_ = false;
+        if (s == "speedUp") {
             speedUp();
-            break;
-        case 'q':
+        } else if (s == "speedDown") {
             speedDown();
-            break;
-        case 'f':
+        } else if (s == "goForward") {
             run(FORWARD, default_speed);
-            break;
-        case 'b':
+        } else if (s == "goBack") {
             run(BACK, default_speed);
-            break;
-        case 'r':
+        } else if (s == "curveRight") {
             curve(RIGHT);
-            break;
-        case 'l':
+        } else if (s == "curveLeft") {
             curve(LEFT);
-            break;
-        case 'R':
+        } else if (s == "stopAndTurnRight") {
             stopAndTurn(RIGHT);
-            break;
-        case 'L':
+        } else if (s == "stopAndTurnLeft") {
             stopAndTurn(LEFT);
-            break;
-        case 's':
+        } else if (s == "stop") {
             stop();
-            break;
-        case 'a':
+        } else if (s == "traceHumanFace") {
             traceHumanFace();
-            break;
-        case 'd':
-            approachObject();
-            break;
-        case 'o':
-            arm_.openFinger();
-            break;
-        case 'c':
-            arm_.closeFinger();
-            break;
-        case 'h':
+        } else if (s == "approachObject") {
+            std::string input;
+            std::thread t(&Robot::approachObject, this);
+            while (std::cin >> input) {
+                if (input == "stop") {
+                    stop_signal_ = true;
+                    stop();
+                    break;
+                }
+            }
+        } else if (s == "printHelp") {
             printHelp();
-            break;
-        case 'w':
-            std::cout << "start show" << std::endl;
+        } else if (s == "showNowView") {
             showNowView();
-            std::cout << "end show" << std::endl;
-            break;
-        case 'x':
+        } else if (s == "openFinger") {
+            arm_.openFinger();
+        } else if (s == "closeFinger") {
+            arm_.closeFinger();
+        } else if (s == "twistWrist") {
+            arm_.twistWrist();
+        } else if (s == "twistWrist") {
+            arm_.returnWrist();
+        } else if (s == "downElbow") {
+            arm_.downElbow();
+        } else if (s == "upElbow") {
+            arm_.upElbow();
+        } else if (s == "downShoulder") {
+            arm_.downShoulder();
+        } else if (s == "upShoulder") {
+            arm_.downShoulder();
+        } else if (s == "quit" || s == "exit") {
             return;
-        default:
+        } else {
             std::cerr << "不正な入力" << std::endl;
         }
     }
@@ -196,6 +207,9 @@ void Robot::traceHumanFace() {
 void Robot::approachObject() {
     static const int threshold = 50;
     while (true) {
+        if (stop_signal_) {
+            break;
+        }
         auto distance = ds_.measureDistance();
         if (distance >= threshold && distance <= 1000) {
             run(FORWARD);

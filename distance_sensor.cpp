@@ -37,12 +37,14 @@ int DistanceSensor::measureDistance() {
     buf[0] = 0x02;
     if ((write(fd_, buf, 1)) != 1) {
         printf("0xE0 Error on select the Range High Byte\n");
-        exit(1);
+        return 0;
+        //exit(1);
     }
 
     if ((read(fd_, buf, 1)) != 1) {
         printf("0xE0 Error on read the Range High Byte\n");
-        exit(1);
+        return 0;
+        //exit(1);
     }
     range = buf[0] << 8;
 

@@ -4,6 +4,7 @@ Camera::Camera() {
     cap_ = cv::VideoCapture(0);
 
     if (!cap_.isOpened()) {
+        std::cerr << "VideoCapture cannot open" << std::endl;
         return;    // キャプチャのエラー処理
     }
 
@@ -33,7 +34,7 @@ bool Camera::detectHumanFace(int& distance_from_center) {
     if (faces.size() != 1) {
         distance_from_center = 0;
     } else {
-        distance_from_center = faces[0].x;
+        distance_from_center = faces[0].x + faces[0].width / 2;
     }
 
     // 顔領域を矩形で囲む
@@ -64,7 +65,6 @@ void Camera::show() {
         std::vector<std::vector<cv::Point> > contours_subset;
         for (unsigned int i = 0; i < contours.size(); i++) {
             double area = contourArea(contours[i]);
-            //printf("%f\n", area);
             if (area > 5000 && area < 15000) {
                 contours_subset.push_back(contours[i]);
             }
@@ -78,4 +78,3 @@ void Camera::show() {
     }
     cv::destroyWindow("movie");
 }
-

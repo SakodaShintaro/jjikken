@@ -74,29 +74,32 @@ void Robot::loop() {
     std::cout << "loop開始" << std::endl;
     std::cout << "コマンドを入力してください" << std::endl;
     auto printHelp = [&](){
-        printf("help\n");
-        printf("speedUp\n");
-        printf("speedDown\n");
-        printf("goForward\n");
-        printf("goBack\n");
-        printf("curveRight\n");
-        printf("curveLeft\n");
-        printf("turnRight\n");
-        printf("turnLeft\n");
-        printf("stop\n");
-        printf("stopAndTurnRight\n");
-        printf("stopAndTurnLeft\n");
-        printf("traceHumanFace\n");
-        printf("approachObject\n");
-        printf("showNowView\n");
-        printf("openFinger\n");
-        printf("closeFinger\n");
-        printf("twistWrist\n");
-        printf("returnWrist\n");
-        printf("downElbow\n");
-        printf("upElbow\n");
-        printf("downShoulder\n");
-        printf("upShoulder\n");
+        printf("・help\n");
+        printf("・speedUp\n");
+        printf("・speedDown\n");
+        printf("・goForward\n");
+        printf("・goBack\n");
+        printf("・curveRight\n");
+        printf("・curveLeft\n");
+        printf("・turnRight\n");
+        printf("・turnLeft\n");
+        printf("・stop\n");
+        printf("・stopAndTurnRight\n");
+        printf("・stopAndTurnLeft\n");
+        printf("・traceHumanFace\n");
+        printf("・approachObject\n");
+        printf("・showNowView\n");
+        printf("・openFinger\n");
+        printf("・closeFinger\n");
+        printf("・twistWrist\n");
+        printf("・returnWrist\n");
+        printf("・bendElbow\n");
+        printf("・straightenElbow\n");
+        printf("・downnShoulder\n");
+        printf("・upShoulder\n");
+        printf("・catch\n");
+        printf("・open\n");
+        printf("・twistAndOpen\n");
     };
     printHelp();
     std::string s;
@@ -142,16 +145,36 @@ void Robot::loop() {
             arm_.closeFinger();
         } else if (s == "twistWrist") {
             arm_.twistWrist();
-        } else if (s == "twistWrist") {
+        } else if (s == "returnWrist") {
             arm_.returnWrist();
-        } else if (s == "downElbow") {
-            arm_.downElbow();
-        } else if (s == "upElbow") {
-            arm_.upElbow();
+        } else if (s == "bendElbow") {
+            arm_.bendElbow();
+        } else if (s == "straightenElbow") {
+            arm_.straightenElbow();
         } else if (s == "downShoulder") {
             arm_.downShoulder();
         } else if (s == "upShoulder") {
+            arm_.upShoulder();
+        } else if (s == "catch") {
+            arm_.bendElbow();
             arm_.downShoulder();
+            arm_.closeFinger();
+            arm_.upShoulder();
+            arm_.straightenElbow();
+        } else if (s == "open") {
+            arm_.bendElbow();
+            arm_.downShoulder();
+            arm_.openFinger();
+            arm_.upShoulder();
+            arm_.straightenElbow();
+        } else if (s == "twistAndOpen") {
+            arm_.twistWrist();
+            arm_.bendElbow();
+            arm_.downShoulder();
+            arm_.openFinger();
+            arm_.upShoulder();
+            arm_.straightenElbow();
+            arm_.returnWrist();
         } else if (s == "quit" || s == "exit") {
             return;
         } else {
@@ -212,12 +235,12 @@ void Robot::approachObject() {
         }
         auto distance = ds_.measureDistance();
         if (distance >= threshold && distance <= 1000) {
-            run(FORWARD);
+            //run(FORWARD);
         } else {
             while (ds_.measureDistance() < threshold) {
-                stopAndTurn(LEFT);
+                //stopAndTurn(LEFT);
             }
-            stop();
+            //stop();
         }
     }
 }

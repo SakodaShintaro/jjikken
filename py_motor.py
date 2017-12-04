@@ -21,9 +21,11 @@ def move(pin_number, cycle):
     GPIO.setmode(GPIO.BOARD)
     GPIO.setup(pin_number, GPIO.OUT)
     servo = GPIO.PWM(pin_number, 50)
-    servo.start(center)
+    #servo.start(center)
+    servo.start(cycle)
     servo.ChangeDutyCycle(cycle)
     time.sleep(0.3)
+    servo.ChangeDutyCycle(cycle)
     GPIO.cleanup()
 
 if __name__ == "__main__":

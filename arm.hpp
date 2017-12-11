@@ -31,7 +31,7 @@ private:
     static constexpr double wrist_front_bound = 4.0;
     static constexpr double wrist_back_bound = 13.0;
     static constexpr double elbow_straight_bound = 5.0;
-    static constexpr double elbow_bend_bound = 7.0;
+    static constexpr double elbow_bend_bound = 7.5;
     static constexpr double shoulder_up_bound = 6.0;
     static constexpr double shoulder_down_bound = 8.55;
 };

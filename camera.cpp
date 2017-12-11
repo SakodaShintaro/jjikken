@@ -58,17 +58,17 @@ void Camera::show() {
         }
 
         //imの加工
-        cvtColor(im, im, CV_BGR2GRAY);
-        threshold(im, im, 0, 255, cv::THRESH_BINARY | cv::THRESH_OTSU);
-        std::vector<std::vector<cv::Point> > contours;
-        cv::findContours(im, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_NONE);
-        std::vector<std::vector<cv::Point> > contours_subset;
-        for (unsigned int i = 0; i < contours.size(); i++) {
-            double area = contourArea(contours[i]);
-            if (area > 5000 && area < 15000) {
-                contours_subset.push_back(contours[i]);
-            }
-        }
+        //cvtColor(im, im, CV_BGR2GRAY);
+        //threshold(im, im, 0, 255, cv::THRESH_BINARY | cv::THRESH_OTSU);
+        //std::vector<std::vector<cv::Point> > contours;
+        //cv::findContours(im, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_NONE);
+        //std::vector<std::vector<cv::Point> > contours_subset;
+        //for (unsigned int i = 0; i < contours.size(); i++) {
+        //    double area = contourArea(contours[i]);
+        //    if (area > 5000 && area < 15000) {
+        //        contours_subset.push_back(contours[i]);
+        //    }
+        //}
 
         cv::imshow("movie", im);
         if (cv::waitKey(30) >= 0) {

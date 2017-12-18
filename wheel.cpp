@@ -33,7 +33,7 @@ void Wheel::speedUp() {
 }
 
 void Wheel::speedDown() {
-    speed_ += unit_speed;
+    speed_ -= unit_speed;
     sendRunSignal();
 }
 

@@ -2,7 +2,6 @@
 
 Arm::Arm() {
     Py_Initialize();
-
     PyObject* pModule = PyImport_ImportModule("py_motor");
     if (pModule == NULL) {
         std::cout << "Moduleの読み込みに失敗" << std::endl;

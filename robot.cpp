@@ -101,10 +101,12 @@ void Robot::loop() {
         printf("・open\n");
         printf("・twistAndOpen\n");
         printf("・playShogi\n");
+        printf("・printGrad\n");
+        printf("・goAlongLine\n");
     };
     printHelp();
     std::string s;
-    std::thread thread;
+    std::unique_ptr<std::thread> thread_ptr;
     while (std::cin >> s) {
         stop_signal_ = false;
         if (s == "speedUp") {
@@ -140,7 +142,7 @@ void Robot::loop() {
         } else if (s == "printHelp") {
             printHelp();
         } else if (s == "showNowView") {
-            thread = std::thread(&Robot::showNowView, this);
+            thread_ptr.reset(new std::thread(&Robot::showNowView, this));
         } else if (s == "openFinger") {
             arm_.openFinger();
         } else if (s == "closeFinger") {
@@ -179,9 +181,31 @@ void Robot::loop() {
             arm_.returnWrist();
         } else if (s == "playShogi") {
             playShogi();
+        } else if (s == "printGrad") {
+            std::string input;
+            std::thread t(&Robot::printGrad, this);
+            while (std::cin >> input) {
+                if (input == "stop") {
+                    stop_signal_ = true;
+                    stop();
+                    break;
+                }
+            }
+        } else if (s == "goAlongLine") {
+            std::string input;
+            std::thread t(&Robot::goAlongLine, this);
+            while (std::cin >> input) {
+                if (input == "stop") {
+                    stop_signal_ = true;
+                    stop();
+                    break;
+                }
+            }
+        } else if (s == "help") {
+            printHelp();
         } else if (s == "quit" || s == "exit") {
-            if (thread.joinable()) {
-                thread.join();
+            if (thread_ptr->joinable()) {
+                thread_ptr->join();
             }
             return;
         } else {
@@ -204,11 +228,13 @@ void Robot::curve(Direction direction) {
     switch (direction) {
     case RIGHT:
         std::cout << "右に曲がる" << std::endl;
-        left_wheel_.speedUp();
+        //left_wheel_.speedUp();
+        right_wheel_.speedDown();
         break;
     case LEFT:
         std::cout << "左に曲がる" << std::endl;
-        right_wheel_.speedUp();
+        //right_wheel_.speedUp();
+        left_wheel_.speedDown();
         break;
     default:
         //ここには来ないはず
@@ -248,6 +274,78 @@ void Robot::approachObject() {
                 //stopAndTurn(LEFT);
             }
             //stop();
+        }
+    }
+}
+
+void Robot::printGrad() {
+    while (true) {
+        auto gradients = camera_.getGradient();
+        printf("表示\n");
+        for (auto grad : gradients) {
+            printf("grad = %f, atan = %f\n", grad, atan(grad) * 180.0 / (3.1415926535 / 2));
+        }
+        sleep(1);
+    }
+}
+
+void Robot::goAlongLine() {
+    static double PI = 3.1415926535;
+    long long i = 0;
+    while (true) {
+        i++;
+        //sleep(1);
+        auto gradients = camera_.getGradient();
+        printf("%lld回目\n", i);
+        for (auto grad : gradients) {
+            printf("grad = %f, atan = %f\n", grad, atan(grad) * 180.0 / (PI / 2));
+        }
+
+        if (gradients.size() == 0) {
+            printf("空\n");
+            run(FORWARD, default_speed);
+            continue;
+        }
+
+        double ave = 0;
+        int num = 0;
+        for (auto grad : gradients) {
+            double angle = atan(grad) * 180.0 / (PI / 2);
+            if (abs(angle) <= 45) {
+                //横の線
+                ave += angle;
+            } else {
+                //縦の線
+                ave += (angle >= 0 ? -(180.0 - angle) : 180.0 + angle);
+            }
+            num++;
+        }
+        ave /= num;
+        //目標値との差
+        printf("ave = %f\n", ave);
+        if (abs(ave) >= 45) {
+            std::cerr << "さすがに45度以上はおかしい" << std::endl;
+            stop();
+            sleep(5);
+            continue;
+        }
+        if (ave > 1.0) {
+            curve(RIGHT);
+            if (usleep(ave * 10000) < 0) {
+                std::cerr << "usleep失敗" << std::endl;
+            }
+            run(FORWARD, default_speed);
+            usleep(100000);
+        } else if (ave < -1.0) {
+            curve(LEFT);
+            if (usleep(-ave * 10000) < 0) {
+                std::cerr << "usleep失敗" << std::endl;
+            }
+            run(FORWARD, default_speed);
+            usleep(100000);
+        } else {
+            run(FORWARD, default_speed);
+            sleep(1);
         }
     }
 }

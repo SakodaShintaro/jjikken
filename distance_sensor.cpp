@@ -21,6 +21,7 @@ int DistanceSensor::measureDistance() {
     char buf[10];
 
     // 1秒経過するまで待つ
+    //test
     time_t start = time(NULL);
     time_t end = time(NULL);
     while(end - start < 1)

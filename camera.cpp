@@ -58,18 +58,25 @@ void Camera::show() {
         }
 
         //imの加工
-        //cvtColor(im, im, CV_BGR2GRAY);
-        //threshold(im, im, 0, 255, cv::THRESH_BINARY | cv::THRESH_OTSU);
-        //std::vector<std::vector<cv::Point> > contours;
-        //cv::findContours(im, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_NONE);
-        //std::vector<std::vector<cv::Point> > contours_subset;
-        //for (unsigned int i = 0; i < contours.size(); i++) {
-        //    double area = contourArea(contours[i]);
-        //    if (area > 5000 && area < 15000) {
-        //        contours_subset.push_back(contours[i]);
-        //    }
-        //}
+        cv::Mat gray_im, binary_im;
+        cv::cvtColor(im, gray_im, CV_BGR2GRAY);
+        //cv::GaussianBlur(gray_im, gray_im, cv::Size(5, 5), 2.5, 2.5);
+        cv::imshow("gray_im", gray_im);
+        cv::Canny(gray_im, binary_im, 30, 100, 3);
+        std::vector<cv::Vec4i> lines;
+        cv::HoughLinesP(binary_im, lines, 1.0, CV_PI / 180, 50, 100, 20);
+        for (auto line : lines) {
+            //float rho = line[0];
+            //float theta = line[1];
+            //double a = cv::cos(theta), b = cv::sin(theta);
+            //double x0 = a * rho, y0 = b * rho;
+            //cv::Point p1(cvRound(x0 + 1000 * (-b)), cvRound(y0 + 1000 * a));
+            //cv::Point p2(cvRound(x0 - 1000 * (-b)), cvRound(y0 - 1000 * a));
+            //cv::line(im, p1, p2, cv::Scalar(0, 0, 255), 1, 8);
+            cv::line(im, cv::Point(line[0], line[1]), cv::Point(line[2], line[3]), cv::Scalar(0, 0, 255), 1, 8);
+        }
 
+        cv::imshow("binary", binary_im);
         cv::imshow("movie", im);
         if (cv::waitKey(30) >= 0) {
             std::cout << "キー入力が来てない気がする" << std::endl;

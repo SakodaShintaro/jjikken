@@ -1,6 +1,5 @@
 ﻿#include"position.hpp"
 #include"piece.hpp"
-#include"common.hpp"
 #include<map>
 #include<iostream>
 #include<fstream>

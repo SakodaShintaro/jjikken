@@ -1,5 +1,4 @@
 ﻿#include"position.hpp"
-#include"common.hpp"
 #include<iostream>
 #include<cstdio>
 #include<ctime>
@@ -7,8 +6,7 @@
 #include<cassert>
 #include<iterator>
 
-Position::Position()
-{
+Position::Position() {
     //盤上の初期化
     for (int i = 0; i < SquareNum; i++) board_[i] = WALL;
     for (Square sq : SquareList) board_[sq] = EMPTY;

@@ -225,42 +225,6 @@ enum PieceState {
     PieceStateNum = square_end,
 };
 
-//static std::map<Piece, PieceState> PieceToStateIndex = {
-//	{ PAWN,   black_hand_pawn },
-//	{ LANCE,  black_hand_lance },
-//	{ KNIGHT, black_hand_knight },
-//	{ SILVER, black_hand_silver },
-//	{ GOLD,   black_hand_gold },
-//	{ BISHOP, black_hand_bishop },
-//	{ ROOK,   black_hand_rook },
-//	{ BLACK_PAWN,    black_pawn },
-//	{ BLACK_LANCE,   black_lance },
-//	{ BLACK_KNIGHT,  black_knight },
-//	{ BLACK_SILVER,  black_silver },
-//	{ BLACK_GOLD,    black_gold },
-//	{ BLACK_BISHOP,  black_bishop },
-//	{ BLACK_ROOK,    black_rook },
-//	{ BLACK_PAWN_PROMOTE,   black_gold },
-//	{ BLACK_LANCE_PROMOTE,  black_gold },
-//	{ BLACK_KNIGHT_PROMOTE, black_gold },
-//	{ BLACK_SILVER_PROMOTE, black_gold },
-//	{ BLACK_BISHOP_PROMOTE, black_gold },
-//	{ BLACK_ROOK_PROMOTE,   black_gold },
-//	{ WHITE_PAWN,    white_pawn },
-//	{ WHITE_LANCE,   white_lance },
-//	{ WHITE_KNIGHT,  white_knight },
-//	{ WHITE_SILVER,  white_silver },
-//	{ WHITE_GOLD,    white_gold },
-//	{ WHITE_BISHOP,  white_bishop },
-//	{ WHITE_ROOK,    white_rook },
-//	{ WHITE_PAWN_PROMOTE,   white_gold },
-//	{ WHITE_LANCE_PROMOTE,  white_gold },
-//	{ WHITE_KNIGHT_PROMOTE, white_gold },
-//	{ WHITE_SILVER_PROMOTE, white_gold },
-//	{ WHITE_BISHOP_PROMOTE, white_gold },
-//	{ WHITE_ROOK_PROMOTE,   white_gold },
-//};
-
 static PieceState PieceToStateIndex[PieceStateNum];
 
 static void initPieceToStateIndex() {

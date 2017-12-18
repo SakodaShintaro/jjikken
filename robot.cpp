@@ -104,6 +104,7 @@ void Robot::loop() {
     };
     printHelp();
     std::string s;
+    std::thread thread;
     while (std::cin >> s) {
         stop_signal_ = false;
         if (s == "speedUp") {
@@ -139,7 +140,7 @@ void Robot::loop() {
         } else if (s == "printHelp") {
             printHelp();
         } else if (s == "showNowView") {
-            showNowView();
+            thread = std::thread(&Robot::showNowView, this);
         } else if (s == "openFinger") {
             arm_.openFinger();
         } else if (s == "closeFinger") {
@@ -179,6 +180,9 @@ void Robot::loop() {
         } else if (s == "playShogi") {
             playShogi();
         } else if (s == "quit" || s == "exit") {
+            if (thread.joinable()) {
+                thread.join();
+            }
             return;
         } else {
             std::cerr << "不正な入力" << std::endl;

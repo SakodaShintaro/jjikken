@@ -36,8 +36,7 @@ public:
     Move(Square to, Square from, bool isDrop, bool isPromote, Piece subject, Piece capture) : move(capture << MOVE_CAPTURE_SHIFT | subject << MOVE_SUBJECT_SHIFT | isPromote << MOVE_PROMOTE_SHIFT | isDrop << MOVE_DROP_SHIFT | from << MOVE_FROM_SHIFT | to << MOVE_TO_SHIFT) {}
 
     //表示
-    void print() const
-    {
+    void print() const {
         std::cout << SquareToFile[to()] << SquareToRank[to()];
         std::cout << PieceToStr[subject()];
         if (isPromote()) fprintf(stdout, "成");
@@ -47,8 +46,7 @@ public:
         else std::cout << std::endl;
     }
 
-    void printWithScore() const
-    {
+    void printWithScore() const {
         std::cout << SquareToFile[to()] << SquareToRank[to()];
         std::cout << PieceToStr[subject()];
         if (isPromote()) fprintf(stdout, "成");
@@ -58,8 +56,7 @@ public:
         std::cout << "score:" << score << std::endl;
     }
 
-    void printUSI() const
-    {
+    void printUSI() const {
         if (isDrop()) {
             printf("%c*%d%c ", PieceToSfenStr[kind(subject())][0], SquareToFile[to()], SquareToRank[to()] + 'a' - 1);
         } else {
@@ -102,7 +99,8 @@ inline Move fullMove(Square to, Square from, bool isDrop, bool isPromote, Piece 
 //比較用に置いとくといいかも?
 const Move NULL_MOVE;
 
-Move stringToMove(std::string input) {
+//Move stringToMove(std::string input);
+static Move stringToMove(std::string input) {
     static std::map<char, Piece> charToPiece = {
         {'P', PAWN},
         {'L', LANCE},

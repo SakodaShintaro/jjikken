@@ -117,18 +117,23 @@ void Arm::straightenElbow() {
 }
 
 void Arm::downShoulder() {
-    for (shoulder_value_ = shoulder_down_bound - 1; shoulder_value_ < shoulder_down_bound; shoulder_value_ += 0.05) {
+    for (; shoulder_value_ < shoulder_down_bound; shoulder_value_ += 0.2) {
         printf("shoudler_value_ = %f\n", shoulder_value_);
         servo(shoulder_pin_, shoulder_value_);
         usleep(sleep_usec);
     }
-}
-
-void Arm::upShoulder() {
-    servo(shoulder_pin_, shoulder_up_bound);
-    //for (shoulder_value_ -= 0.2; shoulder_value_ >= shoulder_up_bound; shoulder_value_ -= 0.2) {
+    //for (shoulder_value_ = shoulder_down_bound - 1; shoulder_value_ < shoulder_down_bound; shoulder_value_ += 0.1) {
     //    printf("shoudler_value_ = %f\n", shoulder_value_);
     //    servo(shoulder_pin_, shoulder_value_);
     //    usleep(sleep_usec);
     //}
+}
+
+void Arm::upShoulder() {
+    //servo(shoulder_pin_, shoulder_up_bound);
+    for (; shoulder_value_ > shoulder_up_bound; shoulder_value_ -= 0.2) {
+        printf("shoudler_value_ = %f\n", shoulder_value_);
+        servo(shoulder_pin_, shoulder_value_);
+        usleep(sleep_usec);
+    }
 }

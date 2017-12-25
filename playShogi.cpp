@@ -134,9 +134,9 @@ void Robot::playShogi() {
                 printf("今回のbestmove->%s---------------------------\n", ptr);
                 std::string bestmove = ptr + 9;
                 //ここで動く
-                //pieceMove();
                 moves.push_back(bestmove);
                 position.doMove(stringToMove(bestmove));
+                doMove(position.lastMove());
                 //strncpy(bestmove, ptr + 9);
                 break;
             }
@@ -147,5 +147,67 @@ void Robot::playShogi() {
         std::cin >> human_move;
         std::cout << "もらった指し手" << human_move << std::endl;
         moves.push_back(human_move);
+    }
+}
+
+void Robot::doMove(const Move& move) {
+    //初期位置からfromへ
+    int from_rank = SquareToRank[move.from()];
+    int from_file = SquareToFile[move.from()];
+    ///筋を合わせる
+    int file_diff = std::abs(5 - from_file);
+    if (from_file < 5) {
+        turn90(LEFT);
+        goSquare(file_diff);
+        turn90(RIGHT);
+    } else if (from_file > 5) {
+        turn90(RIGHT);
+        goSquare(file_diff);
+        turn90(LEFT);
+    }
+    ///段を合わせる
+    goSquare(10 - from_rank);
+
+    //駒を掴む
+    catchObject();
+
+    //fromからtoへ
+    int to_rank = SquareToRank[move.to()];
+    int to_file = SquareToFile[move.to()];
+    ///筋を合わせる
+    file_diff = std::abs(from_file - to_file);
+    if (to_file < from_file) {
+        turn90(LEFT);
+        goSquare(file_diff);
+        turn90(RIGHT);
+    } else if (to_file > from_file) {
+        turn90(RIGHT);
+        goSquare(file_diff);
+        turn90(LEFT);
+    }
+    ///段を合わせる
+    int rank_diff = from_rank - to_rank;
+    if (rank_diff < 0) {
+        backSquare(-rank_diff);
+    } else {
+        goSquare(rank_diff);
+    }
+
+    //駒を離す
+    releaseObject(move.isPromote());
+
+    //初期位置に戻る
+    ///段を戻す
+    backSquare(10 - to_rank);
+
+    file_diff = 5 - to_file;
+    if (file_diff < 0) {
+        turn90(RIGHT);
+        goSquare(-file_diff);
+        turn90(LEFT);
+    } else if (file_diff > 0) {
+        turn90(LEFT);
+        goSquare(file_diff);
+        turn90(RIGHT);
     }
 }

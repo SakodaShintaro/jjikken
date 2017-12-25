@@ -10,6 +10,8 @@ public:
     bool detectHumanFace(int& distance_from_center);
     void show();
     std::vector<double> getGradient();
+    double getVerticalLineX();
+    std::vector<double> getHorizontalLineY();
 private:
     cv::VideoCapture cap_;
 };

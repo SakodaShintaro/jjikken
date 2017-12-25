@@ -14,6 +14,8 @@
 #include<stdlib.h> 
 #include"/usr/include/linux/i2c-dev.h"
 
+class Move;
+
 class Robot {
 public:
     Robot() : right_wheel_(true), left_wheel_(false){}
@@ -61,9 +63,18 @@ public:
 
     void playShogi();
 
+    void catchObject();
+    void releaseObject(bool twist);
+
     void printGrad();
     void goAlongLine();
+    void goAlongVerticalLine();
 
+    void turn90(Direction direction);
+    void goSquare(int n);
+    void backSquare(int n);
+
+    void doMove(const Move& move);
 private:
     //(1)出力類
     //(1)-a 左右のホイール

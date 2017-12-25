@@ -103,6 +103,12 @@ void Robot::loop() {
         printf("・playShogi\n");
         printf("・printGrad\n");
         printf("・goAlongLine\n");
+        printf("・getVertivalLineX\n");
+        printf("・goAlongVLine\n");
+        printf("・turnRight90\n");
+        printf("・turnLeft90\n");
+        printf("・goSquare(n)\n");
+        printf("・sequence\n");
     };
     printHelp();
     std::string s;
@@ -160,25 +166,11 @@ void Robot::loop() {
         } else if (s == "upShoulder") {
             arm_.upShoulder();
         } else if (s == "catch") {
-            arm_.bendElbow();
-            arm_.downShoulder();
-            arm_.closeFinger();
-            arm_.upShoulder();
-            arm_.straightenElbow();
+            catchObject();
         } else if (s == "open") {
-            arm_.bendElbow();
-            arm_.downShoulder();
-            arm_.openFinger();
-            arm_.upShoulder();
-            arm_.straightenElbow();
+            releaseObject(false);
         } else if (s == "twistAndOpen") {
-            arm_.twistWrist();
-            arm_.bendElbow();
-            arm_.downShoulder();
-            arm_.openFinger();
-            arm_.upShoulder();
-            arm_.straightenElbow();
-            arm_.returnWrist();
+            releaseObject(true);
         } else if (s == "playShogi") {
             playShogi();
         } else if (s == "printGrad") {
@@ -191,6 +183,10 @@ void Robot::loop() {
                     break;
                 }
             }
+        } else if (s == "getVerticalLineX") {
+            while (true) {
+                std::cout << camera_.getVerticalLineX() << std::endl;
+            }
         } else if (s == "goAlongLine") {
             std::string input;
             std::thread t(&Robot::goAlongLine, this);
@@ -201,6 +197,28 @@ void Robot::loop() {
                     break;
                 }
             }
+        } else if (s == "goAlongVLine") {
+            goAlongVerticalLine();
+        } else if (s == "turnRight90") {
+            turn90(RIGHT);
+        } else if (s == "turnLeft90") {
+            turn90(LEFT);
+        } else if (s == "goSquare") {
+            int n;
+            std::cin >> n;
+            goSquare(n);
+        } else if (s == "sequence") {
+            turn90(LEFT);
+            goSquare(3);
+            turn90(RIGHT);
+            goSquare(2);
+            catchObject();
+            goSquare(1);
+            releaseObject();
+            backSquare(3);
+            turn90(RIGHT);
+            goSquare(3);
+            turn90(LEFT);
         } else if (s == "help") {
             printHelp();
         } else if (s == "quit" || s == "exit") {
@@ -347,5 +365,233 @@ void Robot::goAlongLine() {
             run(FORWARD, default_speed);
             sleep(1);
         }
+    }
+}
+
+void Robot::goAlongVerticalLine() {
+    //最初に一回基準を取る
+    double target;
+    while ((target = camera_.getVerticalLineX()) < 0) {}
+    std::cout << "target = " << target << std::endl;
+    run(FORWARD, default_speed);
+    while (true) {
+        double x = camera_.getVerticalLineX();
+        std::cout << "x = " << x << std::endl;
+        if (x == -1) {
+            //エラーなので無視
+            run(FORWARD, default_speed);
+        } else if (x < target - 5) {
+            curve(LEFT);
+        } else if (x > target + 5) {
+            curve(RIGHT);
+        } else {
+            run(FORWARD, default_speed);
+        }
+    }
+}
+
+void Robot::turn90(Direction direction) {
+    assert(direction == RIGHT || direction == LEFT);
+
+    auto gradients = camera_.getGradient();
+    if (gradients.size() == 0) {
+        printf("空\n");
+    } else {
+        for (auto grad : gradients) {
+            printf("grad = %f, atan = %f\n", grad, atan(grad) * 180.0 / (CV_PI / 2));
+        }
+    }
+
+    int empty_num = 0;
+    bool turn45 = false;
+    double before = 0.0, bbefore = 0.0;
+
+    stopAndTurn(direction);
+    while (true) {
+        auto gradients = camera_.getGradient();
+        if (gradients.size() == 0) {
+            printf("空\n");
+            empty_num++;
+            //if (empty_num >= 5) {
+            //    turn45 = true;
+            //}
+        } else {
+            double ave = 0;
+            int num = 0;
+            for (auto grad : gradients) {
+                double angle = atan(grad) * 180.0 / (CV_PI / 2);
+                if (abs(angle) <= 45) {
+                    //横の線
+                    ave += angle;
+                } else {
+                    //縦の線
+                    ave += (angle >= 0 ? -(180.0 - angle) : 180.0 + angle);
+                }
+                num++;
+            }
+            ave /= num;
+            //目標値との差
+            printf("ave = %f\n", ave);
+
+            if (direction == LEFT && ave >= 40) {
+                turn45 = true;
+            }
+            if (direction == RIGHT && ave <= -40) {
+                turn45 = true;
+            }
+
+            if (turn45 && (std::abs(ave) + std::abs(before) + std::abs(bbefore) / 3) <= 3.0) {
+                stop();
+                return;
+            }
+            bbefore = before;
+            before = ave;
+        }
+    }
+}
+
+void Robot::goSquare(int n) {
+    run(FORWARD, default_speed);
+    double before = 0.0;
+    bool over = false;
+    int over_square = 0;
+    for (int i = 0; i < 4000; i++) {
+        auto ys = camera_.getHorizontalLineY();
+        std::vector<double> y_ave;
+        std::vector<int> num;
+        //printf("now itr i = %d\n", i);
+        for (auto y : ys) {
+            if (y_ave.size() == 0) {
+                y_ave.push_back(y);
+                num.push_back(1);
+            } else {
+                bool flag = false;
+                for (int i = 0; i < y_ave.size(); i++) {
+                    if (y_ave[i] / num[i] - 5 <= y && y <= y_ave[i] / num[i] + 5) {
+                        y_ave[i] += y;
+                        num[i]++;
+                        flag = true;
+                        break;
+                    }
+                }
+                if (!flag) {
+                    y_ave.push_back(y);
+                    num.push_back(1);
+                }
+            }
+        }
+
+        if (y_ave.size() == 0) {
+            //printf("空");
+        } else if (y_ave.size() == 1) {
+            before = y_ave[0] / num[0];
+            //printf("%15f ", before);
+        } else {
+            for (int j = 0; j < y_ave.size(); j++) {
+                if (y_ave[j] / num[j] <= before + 3) {
+                    before = y_ave[j] / num[j];
+                    break;
+                }
+            }
+            //printf("%15f ", before);
+        }
+        if (before >= 115) {
+            over = true;
+        }
+        if (over && 30 <= before && before < 40) {
+            over = false;
+            over_square++;
+            printf("over_square = %d\n", over_square);
+            if (over_square == n) {
+                stop();
+                return;
+            }
+        }
+        //printf("\n");
+    }
+    stop();
+}
+
+void Robot::backSquare(int n) {
+    run(BACK, default_speed);
+    double before = 0.0;
+    bool over = false;
+    int over_square = 0;
+    for (int i = 0; i < 4000; i++) {
+        auto ys = camera_.getHorizontalLineY();
+        std::vector<double> y_ave;
+        std::vector<int> num;
+        //printf("now itr i = %d\n", i);
+        for (auto y : ys) {
+            if (y_ave.size() == 0) {
+                y_ave.push_back(y);
+                num.push_back(1);
+            } else {
+                bool flag = false;
+                for (int i = 0; i < y_ave.size(); i++) {
+                    if (y_ave[i] / num[i] - 5 <= y && y <= y_ave[i] / num[i] + 5) {
+                        y_ave[i] += y;
+                        num[i]++;
+                        flag = true;
+                        break;
+                    }
+                }
+                if (!flag) {
+                    y_ave.push_back(y);
+                    num.push_back(1);
+                }
+            }
+        }
+
+        if (y_ave.size() == 0) {
+            //printf("空");
+        } else if (y_ave.size() == 1) {
+            before = y_ave[0] / num[0];
+            //printf("%15f ", before);
+        } else {
+            for (int j = 0; j < y_ave.size(); j++) {
+                if (y_ave[j] / num[j] <= before + 3) {
+                    before = y_ave[j] / num[j];
+                    break;
+                }
+            }
+            //printf("%15f ", before);
+        }
+        if (before <= 5) {
+            over = true;
+        }
+        if (over && 100 <= before && before < 110) {
+            over = false;
+            over_square++;
+            printf("over_square = %d\n", over_square);
+            if (over_square == n) {
+                stop();
+                return;
+            }
+        }
+        //printf("\n");
+    }
+    stop();
+}
+
+void Robot::catchObject() {
+    arm_.bendElbow();
+    arm_.downShoulder();
+    arm_.closeFinger();
+    arm_.upShoulder();
+    arm_.straightenElbow();
+}
+
+void Robot::releaseObject(bool twist) {
+    if (twist) {
+        arm_.twistWrist();
+    }
+    arm_.bendElbow();
+    arm_.downShoulder();
+    arm_.openFinger();
+    arm_.upShoulder();
+    arm_.straightenElbow();
+    if (twist) {
+        arm_.returnWrist();
     }
 }

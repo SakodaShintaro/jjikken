@@ -61,22 +61,44 @@ void Arm::servo(int pin, double angle) {
     }
 }
 
+void Arm::servoG(int pin, double target_value, double cur_value) {
+    func2_ = PyObject_GetAttrString(PyImport_ImportModule("py_motor"), "gradualMove");
+    if (PyCallable_Check(func2_)) {
+        PyObject* pyArgs = PyTuple_New(3);
+        if (pyArgs == NULL) {
+            std::cerr << "pyArgsにおいてエラー" << std::endl;
+        }
+
+        PyObject* pyArg1 = PyLong_FromLong(pin);
+        if (pyArgs == NULL) {
+            std::cerr << "pyArg1においてエラー" << std::endl;
+        }
+        PyTuple_SetItem(pyArgs, 0, pyArg1);
+
+        PyObject* pyArg2 = PyFloat_FromDouble(target_value);
+        if (pyArgs == NULL) {
+            std::cerr << "pyArg2においてエラー" << std::endl;
+        }
+        PyTuple_SetItem(pyArgs, 1, pyArg2);
+
+        PyObject* pyArg3 = PyFloat_FromDouble(cur_value);
+        if (pyArgs == NULL) {
+            std::cerr << "pyArg3においてエラー" << std::endl;
+        }
+        PyTuple_SetItem(pyArgs, 2, pyArg3);
+
+        PyObject_CallObject(func2_, pyArgs);
+    } else {
+        std::cerr << "実行不可能" << std::endl;
+    }
+}
+
 void Arm::closeFinger() {
     servo(finger_pin_, finger_close_bound);
-    //for (; finger_value_ <= finger_close_bound; finger_value_ += 0.5) {
-    //    printf("finger_value_ = %f\n", finger_value_);
-    //    servo(finger_pin_, finger_value_);
-    //    usleep(sleep_usec);
-    //}
 }
 
 void Arm::openFinger() {
     servo(finger_pin_, finger_open_bound);
-    //for (; finger_value_ >= finger_open_bound; finger_value_ -= 0.5) {
-    //    printf("finger_value_ = %f\n", finger_value_);
-    //    servo(finger_pin_, finger_value_);
-    //    usleep(sleep_usec);
-    //}
 }
 
 void Arm::twistWrist() {
@@ -90,11 +112,6 @@ void Arm::twistWrist() {
 
 void Arm::returnWrist() {
     servo(wrist_pin_, wrist_front_bound);
-    //for ( ; wrist_value_ >= wrist_front_bound; wrist_value_ -= 1.0) {
-    //    printf("wrist_value_ = %f\n", wrist_value_);
-    //    servo(wrist_pin_, wrist_value_);
-    //    usleep(sleep_usec);
-    //}
 }
 
 void Arm::bendElbow() {
@@ -116,23 +133,11 @@ void Arm::straightenElbow() {
 }
 
 void Arm::downShoulder() {
-    for (; shoulder_value_ < shoulder_down_bound; shoulder_value_ += 0.2) {
-        printf("shoudler_value_ = %f\n", shoulder_value_);
-        servo(shoulder_pin_, shoulder_value_);
-        usleep(sleep_usec);
-    }
-    //for (shoulder_value_ = shoulder_down_bound - 1; shoulder_value_ < shoulder_down_bound; shoulder_value_ += 0.1) {
-    //    printf("shoudler_value_ = %f\n", shoulder_value_);
-    //    servo(shoulder_pin_, shoulder_value_);
-    //    usleep(sleep_usec);
-    //}
+    servoG(shoulder_pin_, shoulder_down_bound, shoulder_value_);
+    shoulder_value_ = shoulder_down_bound;
 }
 
 void Arm::upShoulder() {
-    //servo(shoulder_pin_, shoulder_up_bound);
-    for (; shoulder_value_ > shoulder_up_bound; shoulder_value_ -= 0.2) {
-        printf("shoudler_value_ = %f\n", shoulder_value_);
-        servo(shoulder_pin_, shoulder_value_);
-        usleep(sleep_usec);
-    }
+    servoG(shoulder_pin_, shoulder_up_bound, shoulder_value_);
+    shoulder_value_ = shoulder_up_bound;
 }

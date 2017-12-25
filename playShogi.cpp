@@ -137,7 +137,6 @@ void Robot::playShogi() {
                 moves.push_back(bestmove);
                 position.doMove(stringToMove(bestmove));
                 doMove(position.lastMove());
-                //strncpy(bestmove, ptr + 9);
                 break;
             }
         }
@@ -153,20 +152,22 @@ void Robot::playShogi() {
 void Robot::doMove(const Move& move) {
     //初期位置からfromへ
     int from_rank = SquareToRank[move.from()];
+    printf("from_rank = %d\n", from_rank);
     int from_file = SquareToFile[move.from()];
+    printf("from_file = %d\n", from_file);
     ///筋を合わせる
-    int file_diff = std::abs(5 - from_file);
-    if (from_file < 5) {
+    int file_diff = 5 - from_file;
+    if (file_diff < 0) {
         turn90(LEFT);
-        goSquare(file_diff);
+        goSquare(-file_diff);
         turn90(RIGHT);
-    } else if (from_file > 5) {
+    } else if (file_diff > 0) {
         turn90(RIGHT);
         goSquare(file_diff);
         turn90(LEFT);
     }
     ///段を合わせる
-    goSquare(10 - from_rank);
+    goSquare(9 - from_rank);
 
     //駒を掴む
     catchObject();
@@ -175,12 +176,12 @@ void Robot::doMove(const Move& move) {
     int to_rank = SquareToRank[move.to()];
     int to_file = SquareToFile[move.to()];
     ///筋を合わせる
-    file_diff = std::abs(from_file - to_file);
-    if (to_file < from_file) {
+    file_diff = from_file - to_file;
+    if (file_diff < 0) {
         turn90(LEFT);
-        goSquare(file_diff);
+        goSquare(-file_diff);
         turn90(RIGHT);
-    } else if (to_file > from_file) {
+    } else if (file_diff > 0) {
         turn90(RIGHT);
         goSquare(file_diff);
         turn90(LEFT);
@@ -198,16 +199,16 @@ void Robot::doMove(const Move& move) {
 
     //初期位置に戻る
     ///段を戻す
-    backSquare(10 - to_rank);
+    backSquare(9 - to_rank);
 
-    file_diff = 5 - to_file;
+    file_diff = to_file - 5;
     if (file_diff < 0) {
-        turn90(RIGHT);
+        turn90(LEFT);
         goSquare(-file_diff);
-        turn90(LEFT);
-    } else if (file_diff > 0) {
-        turn90(LEFT);
-        goSquare(file_diff);
         turn90(RIGHT);
+    } else if (file_diff > 0) {
+        turn90(RIGHT);
+        goSquare(file_diff);
+        turn90(LEFT);
     }
 }

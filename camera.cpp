@@ -38,12 +38,12 @@ bool Camera::detectHumanFace(int& distance_from_center) {
     }
 
     // 顔領域を矩形で囲む
-    //std::vector<cv::Rect>::const_iterator r = faces.begin( );
-    //for ( ; r != faces.end( ); ++r ) {
-    //    cv::rectangle(im, cv::Point( r->x, r->y ), cv::Point(r->x + r->width, r->y + r->height), cv::Scalar(20, 20, 200), 3, CV_AA);
-    //}
+    std::vector<cv::Rect>::const_iterator r = faces.begin( );
+    for ( ; r != faces.end( ); ++r ) {
+        cv::rectangle(im, cv::Point( r->x, r->y ), cv::Point(r->x + r->width, r->y + r->height), cv::Scalar(20, 20, 200), 3, CV_AA);
+    }
 
-    //cv::imshow("Camera", im);                // 映像の表示
+    cv::imshow("Camera", im);                // 映像の表示
 
     return !faces.empty();
 }

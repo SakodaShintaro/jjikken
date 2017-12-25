@@ -214,7 +214,7 @@ void Robot::loop() {
             goSquare(2);
             catchObject();
             goSquare(1);
-            releaseObject();
+            releaseObject(false);
             backSquare(3);
             turn90(RIGHT);
             goSquare(3);
@@ -517,7 +517,7 @@ void Robot::backSquare(int n) {
     double before = 0.0;
     bool over = false;
     int over_square = 0;
-    for (int i = 0; i < 4000; i++) {
+    for (int i = 0; i < 40000; i++) {
         auto ys = camera_.getHorizontalLineY();
         std::vector<double> y_ave;
         std::vector<int> num;
@@ -544,10 +544,10 @@ void Robot::backSquare(int n) {
         }
 
         if (y_ave.size() == 0) {
-            //printf("空");
+            printf("空");
         } else if (y_ave.size() == 1) {
             before = y_ave[0] / num[0];
-            //printf("%15f ", before);
+            printf("%15f ", before);
         } else {
             for (int j = 0; j < y_ave.size(); j++) {
                 if (y_ave[j] / num[j] <= before + 3) {
@@ -555,12 +555,12 @@ void Robot::backSquare(int n) {
                     break;
                 }
             }
-            //printf("%15f ", before);
+            printf("%15f ", before);
         }
         if (before <= 5) {
             over = true;
         }
-        if (over && 100 <= before && before < 110) {
+        if (over && 90 <= before && before < 100) {
             over = false;
             over_square++;
             printf("over_square = %d\n", over_square);

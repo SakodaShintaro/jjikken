@@ -64,6 +64,8 @@ public:
     void playShogi();
 
     void catchObject();
+    void prepareForCatch();
+    void catchAndUp();
     void releaseObject(bool twist);
 
     void printGrad();
@@ -72,6 +74,7 @@ public:
 
     void turn90(Direction direction);
     void goSquare(int n);
+    void goSquareAlongLine(int n);
     void backSquare(int n);
 
     void doMove(const Move& move);

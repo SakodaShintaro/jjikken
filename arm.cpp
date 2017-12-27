@@ -1,5 +1,8 @@
 #include"arm.hpp"
 
+double Arm::shoulder_down_bound;
+double Arm::elbow_bend_bound;
+
 Arm::Arm() {
     Py_Initialize();
     PyObject* pModule = PyImport_ImportModule("py_motor");
@@ -19,6 +22,12 @@ Arm::Arm() {
         exit(1);
     }
 
+    std::cout << "elbow_bend_bound : ";
+    std::cin >> elbow_bend_bound;
+
+    std::cout << "shoulder_down_bound : ";
+    std::cin >> shoulder_down_bound;
+
     shoulder_value_ = shoulder_up_bound + 0.1;
     upShoulder();
     elbow_value_ = elbow_straight_bound;
@@ -32,8 +41,6 @@ Arm::Arm() {
 Arm::~Arm() {
     Py_Finalize();
 }
-
-extern constexpr int sleep_usec = 300000;
 
 void Arm::servo(int pin, double angle) {
     func_ = PyObject_GetAttrString(PyImport_ImportModule("py_motor"), "move");
@@ -103,11 +110,6 @@ void Arm::openFinger() {
 
 void Arm::twistWrist() {
     servo(wrist_pin_, wrist_back_bound);
-    //for ( ; wrist_value_ <= wrist_back_bound; wrist_value_ += 1.0) {
-    //    printf("wrist_value_ = %f\n", wrist_value_);
-    //    servo(wrist_pin_, wrist_value_);
-    //    usleep(sleep_usec);
-    //}
 }
 
 void Arm::returnWrist() {
@@ -116,20 +118,10 @@ void Arm::returnWrist() {
 
 void Arm::bendElbow() {
     servo(elbow_pin_, elbow_bend_bound);
-    //for ( ; elbow_value_ <= elbow_bend_bound; elbow_value_ += 0.5) {
-    //    printf("elbow_value_ = %f\n", elbow_value_);
-    //    servo(elbow_pin_, elbow_value_);
-    //    usleep(sleep_usec);
-    //}
 }
 
 void Arm::straightenElbow() {
     servo(elbow_pin_, elbow_straight_bound);
-    //for ( ; elbow_value_ >= elbow_straight_bound; elbow_value_ -= 0.5) {
-    //    printf("elbow_value_ = %f\n", elbow_value_);
-    //    servo(elbow_pin_, elbow_value_);
-    //    usleep(sleep_usec);
-    //}
 }
 
 void Arm::downShoulder() {

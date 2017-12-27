@@ -160,17 +160,28 @@ void Robot::doMove(const Move& move) {
     if (file_diff < 0) {
         turn90(LEFT);
         goSquare(-file_diff);
+        //goSquareAlongLine(-file_diff);
         turn90(RIGHT);
     } else if (file_diff > 0) {
         turn90(RIGHT);
         goSquare(file_diff);
+        //goSquareAlongLine(file_diff);
         turn90(LEFT);
     }
     ///段を合わせる
     goSquare(9 - from_rank);
+    //goSquareAlongLine(9 - from_rank);
 
     //駒を掴む
-    catchObject();
+    //catchObject();
+    run(BACK);
+    sleep(1);
+    stop();
+    prepareForCatch();
+    run(FORWARD);
+    usleep(0.1);
+    stop();
+    catchAndUp();
 
     //fromからtoへ
     int to_rank = SquareToRank[move.to()];
@@ -180,10 +191,12 @@ void Robot::doMove(const Move& move) {
     if (file_diff < 0) {
         turn90(LEFT);
         goSquare(-file_diff);
+        //goSquareAlongLine(-file_diff);
         turn90(RIGHT);
     } else if (file_diff > 0) {
         turn90(RIGHT);
         goSquare(file_diff);
+        //goSquareAlongLine(file_diff);
         turn90(LEFT);
     }
     ///段を合わせる
@@ -192,6 +205,7 @@ void Robot::doMove(const Move& move) {
         backSquare(-rank_diff);
     } else {
         goSquare(rank_diff);
+        //goSquareAlongLine(rank_diff);
     }
 
     //駒を離す
@@ -205,10 +219,12 @@ void Robot::doMove(const Move& move) {
     if (file_diff < 0) {
         turn90(LEFT);
         goSquare(-file_diff);
+        //goSquareAlongLine(-file_diff);
         turn90(RIGHT);
     } else if (file_diff > 0) {
         turn90(RIGHT);
         goSquare(file_diff);
+        //goSquareAlongLine(file_diff);
         turn90(LEFT);
     }
 }

@@ -109,6 +109,9 @@ void Robot::loop() {
         printf("・turnLeft90\n");
         printf("・goSquare(n)\n");
         printf("・sequence\n");
+        printf("・prepareForCatch\n");
+        printf("・catchAndUp\n");
+        printf("・capture\n");
     };
     printHelp();
     std::string s;
@@ -219,6 +222,15 @@ void Robot::loop() {
             turn90(RIGHT);
             goSquare(3);
             turn90(LEFT);
+        } else if (s == "prepareForCatch") {
+            prepareForCatch();
+        } else if (s == "catchAndUp") {
+            catchAndUp();
+        } else if (s == "capture") {
+            while (true) {
+                camera_.capture();
+                sleep(1);
+            }
         } else if (s == "help") {
             printHelp();
         } else if (s == "quit" || s == "exit") {
@@ -450,8 +462,11 @@ void Robot::turn90(Direction direction) {
     }
 }
 
-void Robot::goSquare(int n) {
+void Robot::goSquareAlongLine(int n) {
+    //決め打ちで100
+    double target = 100;
     run(FORWARD, default_speed);
+
     double before = 0.0;
     bool over = false;
     int over_square = 0;
@@ -466,7 +481,7 @@ void Robot::goSquare(int n) {
                 num.push_back(1);
             } else {
                 bool flag = false;
-                for (int i = 0; i < y_ave.size(); i++) {
+                for (unsigned int i = 0; i < y_ave.size(); i++) {
                     if (y_ave[i] / num[i] - 5 <= y && y <= y_ave[i] / num[i] + 5) {
                         y_ave[i] += y;
                         num[i]++;
@@ -487,7 +502,7 @@ void Robot::goSquare(int n) {
             before = y_ave[0] / num[0];
             //printf("%15f ", before);
         } else {
-            for (int j = 0; j < y_ave.size(); j++) {
+            for (unsigned int j = 0; j < y_ave.size(); j++) {
                 if (y_ave[j] / num[j] <= before + 3) {
                     before = y_ave[j] / num[j];
                     break;
@@ -507,6 +522,90 @@ void Robot::goSquare(int n) {
                 return;
             }
         }
+
+        //位置ずれ防止
+        double x = camera_.getVerticalLineX();
+        std::cout << "x = " << x << std::endl;
+        if (x < 0) {
+            continue;
+        }
+        while (std::abs(x - target) > 5) {
+            if (x < target - 5) {
+                curve(LEFT);
+            } else if (x > target + 5) {
+                curve(RIGHT);
+            }
+            x = camera_.getVerticalLineX();
+            if (x < 0) {
+                run(FORWARD);
+                break;
+            }
+        }
+
+        //printf("\n");
+    }
+    stop();
+}
+
+void Robot::goSquare(int n) {
+    run(FORWARD, default_speed);
+    double before = 0.0;
+    bool over = false;
+    int over_square = 0;
+    for (int i = 0; i < 4000; i++) {
+        auto ys = camera_.getHorizontalLineY();
+        std::vector<double> y_ave;
+        std::vector<int> num;
+        //printf("now itr i = %d\n", i);
+        for (auto y : ys) {
+            if (y_ave.size() == 0) {
+                y_ave.push_back(y);
+                num.push_back(1);
+            } else {
+                bool flag = false;
+                for (unsigned int i = 0; i < y_ave.size(); i++) {
+                    if (y_ave[i] / num[i] - 5 <= y && y <= y_ave[i] / num[i] + 5) {
+                        y_ave[i] += y;
+                        num[i]++;
+                        flag = true;
+                        break;
+                    }
+                }
+                if (!flag) {
+                    y_ave.push_back(y);
+                    num.push_back(1);
+                }
+            }
+        }
+
+        if (y_ave.size() == 0) {
+            //printf("空");
+        } else if (y_ave.size() == 1) {
+            before = y_ave[0] / num[0];
+            //printf("%15f ", before);
+        } else {
+            for (unsigned int j = 0; j < y_ave.size(); j++) {
+                if (y_ave[j] / num[j] <= before + 3) {
+                    before = y_ave[j] / num[j];
+                    break;
+                }
+            }
+            //printf("%15f ", before);
+        }
+        if (before >= 115) {
+            over = true;
+        }
+        if (over && 30 <= before && before < 40) {
+            over = false;
+            over_square++;
+            printf("over_square = %d\n", over_square);
+            if (over_square == n) {
+                stop();
+                return;
+            }
+        }
+        double x = camera_.getVerticalLineX();
+        std::cout << "x = " << x << std::endl;
         //printf("\n");
     }
     stop();
@@ -528,7 +627,7 @@ void Robot::backSquare(int n) {
                 num.push_back(1);
             } else {
                 bool flag = false;
-                for (int i = 0; i < y_ave.size(); i++) {
+                for (unsigned int i = 0; i < y_ave.size(); i++) {
                     if (y_ave[i] / num[i] - 5 <= y && y <= y_ave[i] / num[i] + 5) {
                         y_ave[i] += y;
                         num[i]++;
@@ -549,7 +648,7 @@ void Robot::backSquare(int n) {
             before = y_ave[0] / num[0];
             printf("%15f ", before);
         } else {
-            for (int j = 0; j < y_ave.size(); j++) {
+            for (unsigned int j = 0; j < y_ave.size(); j++) {
                 if (y_ave[j] / num[j] <= before + 3) {
                     before = y_ave[j] / num[j];
                     break;
@@ -560,7 +659,7 @@ void Robot::backSquare(int n) {
         if (before <= 5) {
             over = true;
         }
-        if (over && 90 <= before && before < 100) {
+        if (over && 30 <= before && before < 40) {
             over = false;
             over_square++;
             printf("over_square = %d\n", over_square);
@@ -577,6 +676,19 @@ void Robot::backSquare(int n) {
 void Robot::catchObject() {
     arm_.bendElbow();
     arm_.downShoulder();
+    sleep(1);
+    arm_.closeFinger();
+    arm_.upShoulder();
+    arm_.straightenElbow();
+}
+
+void Robot::prepareForCatch() {
+    arm_.openFinger();
+    arm_.bendElbow();
+    arm_.downShoulder();
+}
+
+void Robot::catchAndUp() {
     arm_.closeFinger();
     arm_.upShoulder();
     arm_.straightenElbow();

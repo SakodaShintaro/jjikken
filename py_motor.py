@@ -32,15 +32,18 @@ def gradualMove(pin_number, target_cycle, cur_cycle):
     GPIO.setup(pin_number, GPIO.OUT)
     servo = GPIO.PWM(pin_number, 50)
     servo.start(cur_cycle)
-    step = 0.05
+    step = 0.03
     if target_cycle > cur_cycle:
         array = np.arange(cur_cycle, target_cycle, step)
     else:
-        array = np.arange(cur_cycle - 1.0, target_cycle, -step)
+        array = np.arange(cur_cycle - 4 * step, target_cycle, -step)
     for i in array:
         #print(i)
         servo.ChangeDutyCycle(i)
-        time.sleep(step)
+        time.sleep(0.05)
+    servo.ChangeDutyCycle(target_cycle)
+    time.sleep(0.05)
+
     GPIO.cleanup()
 
 if __name__ == "__main__":

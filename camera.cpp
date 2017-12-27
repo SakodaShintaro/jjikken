@@ -162,3 +162,14 @@ std::vector<double> Camera::getHorizontalLineY() {
     return result;
 }
 
+
+void Camera::capture() {
+    cv::Mat image;
+    cap_ >> image;
+    if (image.empty()) {
+        std::cerr << "画像の取得に失敗" << std::endl;
+        return;
+    }
+    static unsigned int i = 0;
+    cv::imwrite(std::to_string(i++) + ".jpg", image);
+}

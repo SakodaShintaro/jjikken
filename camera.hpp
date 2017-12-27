@@ -9,6 +9,7 @@ public:
     Camera();
     bool detectHumanFace(int& distance_from_center);
     void show();
+    void capture();
     std::vector<double> getGradient();
     double getVerticalLineX();
     std::vector<double> getHorizontalLineY();

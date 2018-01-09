@@ -181,8 +181,9 @@ double Camera::getVerticalLineX() {
         if (line[0] == line[2]) {
             return line[0];
         }
-        if (line[2] - 5 <= line[0] && line[0] <= line[2] + 5) {
-            //line[2] == line[0] +- 5 ということ
+        static const int margin = 20;
+        if (line[2] - margin <= line[0] && line[0] <= line[2] + margin) {
+            //line[2] == line[0] +- margin ということ
             sum += ((double)line[2] + line[0]) / 2;
             num++;
         }

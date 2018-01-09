@@ -334,7 +334,7 @@ void Robot::printGrad() {
         auto gradients = camera_.getGradient();
         printf("表示\n");
         for (auto grad : gradients) {
-            printf("grad = %f, atan = %f\n", grad, atan(grad) * 180.0 / (3.1415926535 / 2));
+            printf("grad = %f, atan = %f\n", grad, atan(grad) * 180.0 / (CV_PI / 2));
         }
         sleep(1);
     }
@@ -616,7 +616,9 @@ void Robot::goSquare(int n) {
         if (before >= 115) {
             over = true;
         }
-        if (over && 30 <= before && before < 40) {
+        static const int goal = 140;
+        static const int margin = 5;
+        if (over && goal - margin <= before && before < goal + margin) {
             over = false;
             over_square++;
             printf("over_square = %d\n", over_square);

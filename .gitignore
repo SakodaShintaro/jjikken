@@ -1,2 +1,4 @@
 *.o
 robot
+*.jpg
+*.png

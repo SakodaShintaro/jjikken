@@ -1,7 +1,7 @@
 #include"camera.hpp"
 
 Camera::Camera() {
-    cap_ = cv::VideoCapture(0);
+    cap_ = cv::VideoCapture(1);
 
     if (!cap_.isOpened()) {
         std::cerr << "VideoCapture cannot open" << std::endl;
@@ -11,8 +11,8 @@ Camera::Camera() {
     //cap_.set(CV_CAP_PROP_FRAME_WIDTH,  160);
     //cap_.set(CV_CAP_PROP_FRAME_HEIGHT, 120);
     //もっと解像度上げていいだろう
-    cap_.set(CV_CAP_PROP_FRAME_WIDTH,  320);
-    cap_.set(CV_CAP_PROP_FRAME_HEIGHT, 240);
+    cap_.set(CV_CAP_PROP_FRAME_WIDTH,  640);
+    cap_.set(CV_CAP_PROP_FRAME_HEIGHT, 480);
 }
 
 bool Camera::detectHumanFace(int& distance_from_center) {
@@ -47,8 +47,45 @@ bool Camera::detectHumanFace(int& distance_from_center) {
     }
 
     cv::imshow("Camera", im);                // 映像の表示
+    cv::waitKey(0);
 
     return !faces.empty();
+}
+
+bool Camera::detectPiece(cv::Point& p) {
+    cv::Mat im, gray;                    // 変数宣言
+
+    // カスケード分類器の取得
+    static cv::CascadeClassifier cascade;
+
+    if (cascade.empty()) {
+        if (!cascade.load("../work/cascade/cas14/cascade.xml")) {
+            fprintf(stderr, "casacde load error\n");
+            return false;
+        }
+    }
+
+    std::vector<cv::Rect> pieces;
+
+    cap_ >> im;                            // カメラ映像の取得
+
+    cv::cvtColor(im, gray, CV_RGB2GRAY);    // グレースケール変換
+
+    //カスケード分類器で探索
+    cascade.detectMultiScale(gray, pieces, 1.05, 2, CV_HAAR_SCALE_IMAGE, cv::Size(30, 30));
+
+    if (pieces.size() != 1) {
+        p.x = p.y = -1;
+        return false;
+    } else {
+        for (auto r = pieces.begin() ; r != pieces.end( ); ++r ) {
+            cv::rectangle(im, cv::Point( r->x, r->y ), cv::Point(r->x + r->width, r->y + r->height), cv::Scalar(20, 20, 200), 3, CV_AA);
+        }
+
+        p.x = pieces[0].x + pieces[0].width / 2;
+        p.y = pieces[0].y + pieces[0].height / 2;
+        return true;
+    }
 }
 
 void Camera::show() {
@@ -65,7 +102,7 @@ void Camera::show() {
         cv::cvtColor(im, gray_im, CV_BGR2GRAY);
         cv::Canny(gray_im, binary_im, 45, 100, 3);
         std::vector<cv::Vec4i> lines;
-        cv::HoughLinesP(binary_im, lines, 1.0, CV_PI / 180, 50, 90, 15);
+        cv::HoughLinesP(binary_im, lines, 1.0, CV_PI / 180, 50, 360, 60);
         for (auto line : lines) {
             cv::line(im, cv::Point(line[0], line[1]), cv::Point(line[2], line[3]), cv::Scalar(0, 0, 255), 1, 8);
         }
@@ -93,9 +130,9 @@ std::vector<double> Camera::getGradient() {
     //imの加工
     cv::Mat gray_im, binary_im;
     cv::cvtColor(im, gray_im, CV_BGR2GRAY);
-    cv::Canny(gray_im, binary_im, 45, 100, 3);
+    cv::Canny(gray_im, binary_im, 90, 200, 3);
     std::vector<cv::Vec4i> lines;
-    cv::HoughLinesP(binary_im, lines, 1.0, CV_PI / 180, 50, 90, 15);
+    cv::HoughLinesP(binary_im, lines, 1.0, CV_PI / 180, 50, 360, 60);
     for (auto line : lines) {
         double grad = (line[0] == line[2] ? INT_MAX : (double)(line[1] - line[3]) / (line[0] - line[2]));
         result.push_back(grad);
@@ -174,5 +211,45 @@ void Camera::capture() {
         return;
     }
     static unsigned int i = 0;
-    cv::imwrite(std::to_string(i++) + ".jpg", image);
+    cv::imwrite("./neg/bg " + std::to_string(i++) + ".jpg", image);
+}
+
+
+bool Camera::detectSomething()
+{
+    cv::Mat tmp;
+    cap_ >> tmp;
+    int size = tmp.cols * tmp.rows;
+    //while (true) {
+    cv::Mat image, medimg, grayimg, binimg;
+    cap_ >> image;
+    cv::medianBlur(image, medimg, 11);
+    cv::cvtColor(medimg, grayimg, CV_RGB2HSV);
+
+    std::vector<cv::Mat> planes;
+    cv::split(grayimg, planes);
+    //cvtColor(medimg, grayimg, CV_BGR2GRAY);
+
+    cv::threshold(planes[1], binimg, 0.0, 255.0, CV_THRESH_BINARY | CV_THRESH_OTSU);
+    std::vector<std::vector <cv::Point> > contours;
+    cv::findContours(binimg, contours, CV_RETR_LIST, CV_CHAIN_APPROX_SIMPLE);
+    for (auto contour = contours.begin();contour != contours.end(); contour++) {
+        cv::polylines(image, *contour, true, cv::Scalar(0, 255, 0), 2);
+    }
+
+    for (auto contour = contours.begin();contour != contours.end(); contour++) {
+        std::vector<cv::Point> approx;
+        cv::approxPolyDP(cv::Mat(*contour), approx, 0.01 * cv::arcLength(*contour, true), true);
+        double area = cv::contourArea(approx);
+        //if (isContourConvex(approx) && area > size/100)
+        if (area > size / 50) {
+            cv::polylines(image, approx, true, cv::Scalar(255, 0, 0), 2);
+            return true;
+        }
+    }
+
+    cv::imshow(" ", image);
+    cv::waitKey(0);
+    //}
+    return false;
 }

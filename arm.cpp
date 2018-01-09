@@ -22,11 +22,13 @@ Arm::Arm() {
         exit(1);
     }
 
-    std::cout << "elbow_bend_bound(7.4ぐらい) : ";
-    std::cin >> elbow_bend_bound;
+    //std::cout << "elbow_bend_bound(7.4ぐらい) : ";
+    //std::cin >> elbow_bend_bound;
+    elbow_bend_bound = 7.4;
 
-    std::cout << "shoulder_down_bound(9.0ぐらい) : ";
-    std::cin >> shoulder_down_bound;
+    //std::cout << "shoulder_down_bound(9.0ぐらい) : ";
+    //std::cin >> shoulder_down_bound;
+    shoulder_down_bound = 9.0;
 
     shoulder_value_ = shoulder_up_bound + 0.1;
     upShoulder();

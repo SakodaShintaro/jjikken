@@ -112,6 +112,8 @@ void Robot::loop() {
         printf("・prepareForCatch\n");
         printf("・catchAndUp\n");
         printf("・capture\n");
+        printf("・detectPiece\n");
+        printf("・detectAndCatch\n");
     };
     printHelp();
     std::string s;
@@ -138,6 +140,16 @@ void Robot::loop() {
             stop();
         } else if (s == "traceHumanFace") {
             traceHumanFace();
+        } else if (s == "detectPiece") {
+            cv::Point p;
+            while (true) {
+                camera_.detectPiece(p);
+                printf("(%d, %d)\n", p.x, p.y);
+            }
+        } else if (s == "detectAndCatch") {
+            goGoodPosition();
+            prepareForCatch();
+            catchAndUp();
         } else if (s == "approachObject") {
             std::string input;
             std::thread t(&Robot::approachObject, this);
@@ -227,6 +239,7 @@ void Robot::loop() {
         } else if (s == "catchAndUp") {
             catchAndUp();
         } else if (s == "capture") {
+            run(FORWARD);
             while (true) {
                 camera_.capture();
                 sleep(1);
@@ -238,6 +251,14 @@ void Robot::loop() {
                 thread_ptr->join();
             }
             return;
+        } else if (s == "detectSomething") {
+            bool t = camera_.detectSomething();
+            std::cout << std::boolalpha << t << std::endl;
+            if (!t) {
+                run(FORWARD);
+            } else {
+                stop();
+            }
         } else {
             std::cerr << "不正な入力" << std::endl;
         }
@@ -452,7 +473,7 @@ void Robot::turn90(Direction direction) {
                 turn45 = true;
             }
 
-            if (turn45 && (std::abs(ave) + std::abs(before) + std::abs(bbefore) / 3) <= 3.0) {
+            if (turn45 && (std::abs(ave) + std::abs(before) + std::abs(bbefore) / 3) <= 2.0) {
                 stop();
                 return;
             }
@@ -706,4 +727,35 @@ void Robot::releaseObject(bool twist) {
     if (twist) {
         arm_.returnWrist();
     }
+}
+
+void Robot::goGoodPosition() {
+    static const int ok = 200;
+    static const int margin = 1;
+    cv::Point p, before(0, 0);
+    while (true) {
+        if (!camera_.detectPiece(p)) {
+            printf("認識失敗\n");
+            stop();
+            continue;
+        }
+
+        printf("(%3d, %3d)\n", p.x, p.y);
+        if (before.x == 0 && before.y == 0) {
+            before = p;
+        }
+
+        if (ok - margin <= (p.y + before.y) / 2 && (p.y + before.y) / 2 <= ok + margin) {
+            printf("ちょうど良い\n");
+            break;
+        } else if ((p.y + before.y) / 2 < ok - margin) {
+            printf("yが小さい\n");
+            run(FORWARD, default_speed / 4);
+        } else {
+            printf("yが大きい\n");
+            run(BACK, default_speed / 4);
+        }
+        before = p;
+    }
+    stop();
 }

@@ -177,12 +177,10 @@ void Robot::doMove(const Move& move) {
     run(BACK);
     usleep(1000000);
     stop();
-    prepareForCatch();
-    run(FORWARD);
+    //ここで駒がつかめる位置に調整
+    goGoodPosition();
+    catchObject();
     usleep(100000);
-    stop();
-    usleep(100000);
-    catchAndUp();
 
     //fromからtoへ
     int to_rank = SquareToRank[move.to()];

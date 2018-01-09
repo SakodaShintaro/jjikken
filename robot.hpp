@@ -78,6 +78,9 @@ public:
     void backSquare(int n);
 
     void doMove(const Move& move);
+
+    void goGoodPosition();
+
 private:
     //(1)出力類
     //(1)-a 左右のホイール

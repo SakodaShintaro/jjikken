@@ -1,5 +1,21 @@
 #include"camera.hpp"
 
+//カメラ
+static const int WIDTH = 640;
+static const int HEIGHT = 480;
+
+//Canny
+static const double threshold1 = 90;
+static const double threshold2 = 200;
+static const int apertureSize = 3;
+
+//HoughLinesP
+static const double rho = 1.0;
+static const double theta = CV_PI / 180.0;
+static const int threshold = 40;
+static const double minLineLength = HEIGHT * 0.8;
+static const double maxLineGap = minLineLength / 6;
+
 Camera::Camera() {
     cap_ = cv::VideoCapture(1);
 
@@ -11,8 +27,8 @@ Camera::Camera() {
     //cap_.set(CV_CAP_PROP_FRAME_WIDTH,  160);
     //cap_.set(CV_CAP_PROP_FRAME_HEIGHT, 120);
     //もっと解像度上げていいだろう
-    cap_.set(CV_CAP_PROP_FRAME_WIDTH,  640);
-    cap_.set(CV_CAP_PROP_FRAME_HEIGHT, 480);
+    cap_.set(CV_CAP_PROP_FRAME_WIDTH,  WIDTH);
+    cap_.set(CV_CAP_PROP_FRAME_HEIGHT, HEIGHT);
 }
 
 bool Camera::detectHumanFace(int& distance_from_center) {
@@ -91,18 +107,18 @@ bool Camera::detectPiece(cv::Point& p) {
 void Camera::show() {
     cv::namedWindow("movie", cv::WINDOW_AUTOSIZE);
     while (true) {
-        cv::Mat im;
+        cv::Mat im, gray_im, binary_im;
         cap_ >> im;
         if (im.empty()) {
             break;
         }
 
         //imの加工
-        cv::Mat gray_im, binary_im;
-        cv::cvtColor(im, gray_im, CV_BGR2GRAY);
-        cv::Canny(gray_im, binary_im, 45, 100, 3);
         std::vector<cv::Vec4i> lines;
-        cv::HoughLinesP(binary_im, lines, 1.0, CV_PI / 180, 50, 360, 60);
+
+        cv::cvtColor(im, gray_im, CV_BGR2GRAY);
+        cv::Canny(gray_im, binary_im, threshold1, threshold2, apertureSize);
+        cv::HoughLinesP(binary_im, lines, rho, theta, threshold, minLineLength, maxLineGap);
         for (auto line : lines) {
             cv::line(im, cv::Point(line[0], line[1]), cv::Point(line[2], line[3]), cv::Scalar(0, 0, 255), 1, 8);
         }
@@ -120,6 +136,7 @@ void Camera::show() {
 std::vector<double> Camera::getGradient() {
     std::vector<double> result;
     cv::Mat im;
+    cv::Mat gray_im, binary_im;
     cap_ >> im;
 
     if (im.empty()) {
@@ -128,11 +145,13 @@ std::vector<double> Camera::getGradient() {
     }
 
     //imの加工
-    cv::Mat gray_im, binary_im;
-    cv::cvtColor(im, gray_im, CV_BGR2GRAY);
-    cv::Canny(gray_im, binary_im, 90, 200, 3);
     std::vector<cv::Vec4i> lines;
-    cv::HoughLinesP(binary_im, lines, 1.0, CV_PI / 180, 50, 360, 60);
+
+    cv::cvtColor(im, gray_im, CV_BGR2GRAY);
+    //cv::Canny(gray_im, binary_im, 90, 200, 3);
+    //cv::HoughLinesP(binary_im, lines, 1.0, CV_PI / 180, 50, 360, 60);
+    cv::Canny(gray_im, binary_im, threshold1, threshold2, apertureSize);
+    cv::HoughLinesP(binary_im, lines, rho, theta, threshold, minLineLength, maxLineGap);
     for (auto line : lines) {
         double grad = (line[0] == line[2] ? INT_MAX : (double)(line[1] - line[3]) / (line[0] - line[2]));
         result.push_back(grad);
@@ -142,7 +161,7 @@ std::vector<double> Camera::getGradient() {
 }
 
 double Camera::getVerticalLineX() {
-    cv::Mat im;
+    cv::Mat im, gray_im, binary_im;
     cap_ >> im;
 
     if (im.empty()) {
@@ -151,11 +170,11 @@ double Camera::getVerticalLineX() {
     }
 
     //imの加工
-    cv::Mat gray_im, binary_im;
-    cv::cvtColor(im, gray_im, CV_BGR2GRAY);
-    cv::Canny(gray_im, binary_im, 45, 100, 3);
     std::vector<cv::Vec4i> lines;
-    cv::HoughLinesP(binary_im, lines, 1.0, CV_PI / 180, 50, 90, 15);
+
+    cv::cvtColor(im, gray_im, CV_BGR2GRAY);
+    cv::Canny(gray_im, binary_im, threshold1, threshold2, apertureSize);
+    cv::HoughLinesP(binary_im, lines, rho, theta, threshold, minLineLength, maxLineGap);
     double sum = 0;
     int num = 0;
     for (auto line : lines) {
@@ -178,7 +197,7 @@ double Camera::getVerticalLineX() {
 
 std::vector<double> Camera::getHorizontalLineY() {
     std::vector<double> result;
-    cv::Mat im;
+    cv::Mat im, gray_im, binary_im;
     cap_ >> im;
 
     if (im.empty()) {
@@ -187,11 +206,10 @@ std::vector<double> Camera::getHorizontalLineY() {
     }
 
     //imの加工
-    cv::Mat gray_im, binary_im;
     cv::cvtColor(im, gray_im, CV_BGR2GRAY);
-    cv::Canny(gray_im, binary_im, 45, 100, 3);
     std::vector<cv::Vec4i> lines;
-    cv::HoughLinesP(binary_im, lines, 1.0, CV_PI / 180, 50, 90, 15);
+    cv::Canny(gray_im, binary_im, threshold1, threshold2, apertureSize);
+    cv::HoughLinesP(binary_im, lines, rho, theta, threshold, minLineLength, maxLineGap);
     for (auto line : lines) {
         double grad = (line[0] == line[2] ? INT_MAX : (double)(line[1] - line[3]) / (line[0] - line[2]));
         if (std::abs(grad) < 2) {
@@ -211,7 +229,7 @@ void Camera::capture() {
         return;
     }
     static unsigned int i = 0;
-    cv::imwrite("./neg/bg " + std::to_string(i++) + ".jpg", image);
+    cv::imwrite("./neg/bg" + std::to_string(i++) + ".jpg", image);
 }
 
 

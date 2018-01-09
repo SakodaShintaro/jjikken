@@ -473,7 +473,7 @@ void Robot::turn90(Direction direction) {
                 turn45 = true;
             }
 
-            if (turn45 && (std::abs(ave) + std::abs(before) + std::abs(bbefore) / 3) <= 2.0) {
+            if (turn45 && (std::abs(ave) + std::abs(before) + std::abs(bbefore) / 3) <= 6.0) {
                 stop();
                 return;
             }
@@ -484,8 +484,8 @@ void Robot::turn90(Direction direction) {
 }
 
 void Robot::goSquareAlongLine(int n) {
-    //決め打ちで100
-    double target = 100;
+    //決め打ちで400
+    const double target = 400;
     run(FORWARD, default_speed);
 
     double before = 0.0;
@@ -518,10 +518,10 @@ void Robot::goSquareAlongLine(int n) {
         }
 
         if (y_ave.size() == 0) {
-            //printf("空");
+            printf("空");
         } else if (y_ave.size() == 1) {
             before = y_ave[0] / num[0];
-            //printf("%15f ", before);
+            printf("%15f ", before);
         } else {
             for (unsigned int j = 0; j < y_ave.size(); j++) {
                 if (y_ave[j] / num[j] <= before + 3) {
@@ -529,12 +529,12 @@ void Robot::goSquareAlongLine(int n) {
                     break;
                 }
             }
-            //printf("%15f ", before);
+            printf("%15f ", before);
         }
-        if (before >= 115) {
+        if (before >= 115 * 4) {
             over = true;
         }
-        if (over && 30 <= before && before < 40) {
+        if (over && 30 * 4 <= before && before < 40 * 4) {
             over = false;
             over_square++;
             printf("over_square = %d\n", over_square);
@@ -550,7 +550,7 @@ void Robot::goSquareAlongLine(int n) {
         if (x < 0) {
             continue;
         }
-        while (std::abs(x - target) > 5) {
+        while (std::abs(x - target) > 5 * 4) {
             if (x < target - 5) {
                 curve(LEFT);
             } else if (x > target + 5) {

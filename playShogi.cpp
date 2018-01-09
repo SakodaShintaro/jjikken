@@ -175,12 +175,13 @@ void Robot::doMove(const Move& move) {
     //駒を掴む
     //catchObject();
     run(BACK);
-    sleep(1);
+    usleep(1000000);
     stop();
     prepareForCatch();
     run(FORWARD);
-    usleep(0.1);
+    usleep(100000);
     stop();
+    usleep(100000);
     catchAndUp();
 
     //fromからtoへ
@@ -209,6 +210,13 @@ void Robot::doMove(const Move& move) {
     }
 
     //駒を離す
+    run(BACK);
+    usleep(1000000);
+    stop();
+    run(FORWARD);
+    usleep(100000);
+    stop();
+    usleep(100000);
     releaseObject(move.isPromote());
 
     //初期位置に戻る

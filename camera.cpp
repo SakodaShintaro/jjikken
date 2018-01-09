@@ -8,8 +8,11 @@ Camera::Camera() {
         return;    // キャプチャのエラー処理
     }
 
-    cap_.set(CV_CAP_PROP_FRAME_WIDTH,  160);
-    cap_.set(CV_CAP_PROP_FRAME_HEIGHT, 120);
+    //cap_.set(CV_CAP_PROP_FRAME_WIDTH,  160);
+    //cap_.set(CV_CAP_PROP_FRAME_HEIGHT, 120);
+    //もっと解像度上げていいだろう
+    cap_.set(CV_CAP_PROP_FRAME_WIDTH,  320);
+    cap_.set(CV_CAP_PROP_FRAME_HEIGHT, 240);
 }
 
 bool Camera::detectHumanFace(int& distance_from_center) {

@@ -14,19 +14,25 @@ static const double rho = 1.0;
 static const double theta = CV_PI / 180.0;
 static const int threshold = 40;
 static const double minLineLength = HEIGHT * 0.8;
-static const double maxLineGap = minLineLength / 6;
+static const double maxLineGap = minLineLength / 5;
+
+static std::vector<cv::Vec4i> getLines(const cv::Mat& image) {
+    cv::Mat gray_im, binary_im;
+    std::vector<cv::Vec4i> lines;
+    cv::cvtColor(image, gray_im, CV_BGR2GRAY);
+    cv::Canny(gray_im, binary_im, threshold1, threshold2, apertureSize);
+    cv::HoughLinesP(binary_im, lines, rho, theta, threshold, minLineLength, maxLineGap);
+    return lines;
+}
 
 Camera::Camera() {
-    cap_ = cv::VideoCapture(1);
+    cap_ = cv::VideoCapture(0);
 
     if (!cap_.isOpened()) {
         std::cerr << "VideoCapture cannot open" << std::endl;
         return;    // キャプチャのエラー処理
     }
 
-    //cap_.set(CV_CAP_PROP_FRAME_WIDTH,  160);
-    //cap_.set(CV_CAP_PROP_FRAME_HEIGHT, 120);
-    //もっと解像度上げていいだろう
     cap_.set(CV_CAP_PROP_FRAME_WIDTH,  WIDTH);
     cap_.set(CV_CAP_PROP_FRAME_HEIGHT, HEIGHT);
 }
@@ -114,11 +120,8 @@ void Camera::show() {
         }
 
         //imの加工
-        std::vector<cv::Vec4i> lines;
+        std::vector<cv::Vec4i> lines = getLines(im);
 
-        cv::cvtColor(im, gray_im, CV_BGR2GRAY);
-        cv::Canny(gray_im, binary_im, threshold1, threshold2, apertureSize);
-        cv::HoughLinesP(binary_im, lines, rho, theta, threshold, minLineLength, maxLineGap);
         for (auto line : lines) {
             cv::line(im, cv::Point(line[0], line[1]), cv::Point(line[2], line[3]), cv::Scalar(0, 0, 255), 1, 8);
         }
@@ -144,14 +147,7 @@ std::vector<double> Camera::getGradient() {
         return result;
     }
 
-    //imの加工
-    std::vector<cv::Vec4i> lines;
-
-    cv::cvtColor(im, gray_im, CV_BGR2GRAY);
-    //cv::Canny(gray_im, binary_im, 90, 200, 3);
-    //cv::HoughLinesP(binary_im, lines, 1.0, CV_PI / 180, 50, 360, 60);
-    cv::Canny(gray_im, binary_im, threshold1, threshold2, apertureSize);
-    cv::HoughLinesP(binary_im, lines, rho, theta, threshold, minLineLength, maxLineGap);
+    std::vector<cv::Vec4i> lines = getLines(im);
     for (auto line : lines) {
         double grad = (line[0] == line[2] ? INT_MAX : (double)(line[1] - line[3]) / (line[0] - line[2]));
         result.push_back(grad);
@@ -169,21 +165,16 @@ double Camera::getVerticalLineX() {
         return -1;
     }
 
-    //imの加工
-    std::vector<cv::Vec4i> lines;
-
-    cv::cvtColor(im, gray_im, CV_BGR2GRAY);
-    cv::Canny(gray_im, binary_im, threshold1, threshold2, apertureSize);
-    cv::HoughLinesP(binary_im, lines, rho, theta, threshold, minLineLength, maxLineGap);
+    std::vector<cv::Vec4i> lines = getLines(im);
     double sum = 0;
     int num = 0;
     for (auto line : lines) {
         if (line[0] == line[2]) {
             return line[0];
         }
-        static const int margin = 20;
+        static const int margin = 50;
         if (line[2] - margin <= line[0] && line[0] <= line[2] + margin) {
-            //line[2] == line[0] +- margin ということ
+            //line[2] == line[0] +- margin ということ.つまりx座標が大体同じ(y軸に平行な直線)
             sum += ((double)line[2] + line[0]) / 2;
             num++;
         }
@@ -207,13 +198,12 @@ std::vector<double> Camera::getHorizontalLineY() {
     }
 
     //imの加工
-    cv::cvtColor(im, gray_im, CV_BGR2GRAY);
-    std::vector<cv::Vec4i> lines;
-    cv::Canny(gray_im, binary_im, threshold1, threshold2, apertureSize);
-    cv::HoughLinesP(binary_im, lines, rho, theta, threshold, minLineLength, maxLineGap);
+    static const double threshold = 1.0;
+    std::vector<cv::Vec4i> lines = getLines(im);
     for (auto line : lines) {
+        //傾きを求める
         double grad = (line[0] == line[2] ? INT_MAX : (double)(line[1] - line[3]) / (line[0] - line[2]));
-        if (std::abs(grad) < 2) {
+        if (std::abs(grad) < threshold) {
             result.push_back(((double)line[1] + line[3]) / 2);
         }
     }

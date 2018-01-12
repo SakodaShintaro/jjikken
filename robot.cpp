@@ -319,12 +319,12 @@ void Robot::approachObject() {
         }
         auto distance = ds_.measureDistance();
         if (distance >= threshold && distance <= 1000) {
-            //run(FORWARD);
+            run(FORWARD);
         } else {
             while (ds_.measureDistance() < threshold) {
-                //stopAndTurn(LEFT);
+                stopAndTurn(LEFT);
             }
-            //stop();
+            stop();
         }
     }
 }
@@ -341,7 +341,6 @@ void Robot::printGrad() {
 }
 
 void Robot::goAlongLine() {
-    static double PI = 3.1415926535;
     long long i = 0;
     while (true) {
         i++;
@@ -349,7 +348,7 @@ void Robot::goAlongLine() {
         auto gradients = camera_.getGradient();
         printf("%lld回目\n", i);
         for (auto grad : gradients) {
-            printf("grad = %f, atan = %f\n", grad, atan(grad) * 180.0 / (PI / 2));
+            printf("grad = %f, atan = %f\n", grad, atan(grad) * 180.0 / (CV_PI / 2));
         }
 
         if (gradients.size() == 0) {
@@ -361,7 +360,7 @@ void Robot::goAlongLine() {
         double ave = 0;
         int num = 0;
         for (auto grad : gradients) {
-            double angle = atan(grad) * 180.0 / (PI / 2);
+            double angle = atan(grad) * 180.0 / (CV_PI / 2);
             if (abs(angle) <= 45) {
                 //横の線
                 ave += angle;
@@ -435,7 +434,6 @@ void Robot::turn90(Direction direction) {
         }
     }
 
-    int empty_num = 0;
     bool turn45 = false;
     double before = 0.0, bbefore = 0.0;
 
@@ -444,10 +442,6 @@ void Robot::turn90(Direction direction) {
         auto gradients = camera_.getGradient();
         if (gradients.size() == 0) {
             printf("空\n");
-            empty_num++;
-            //if (empty_num >= 5) {
-            //    turn45 = true;
-            //}
         } else {
             double ave = 0;
             int num = 0;
@@ -466,14 +460,18 @@ void Robot::turn90(Direction direction) {
             //目標値との差
             printf("ave = %f\n", ave);
 
-            if (direction == LEFT && ave >= 40) {
+            if (!turn45 && direction == LEFT && ave >= 40) {
                 turn45 = true;
+                printf("flag on --------------------------------\n");
             }
-            if (direction == RIGHT && ave <= -40) {
+            if (!turn45 && direction == RIGHT && ave <= -40) {
                 turn45 = true;
+                printf("flag on --------------------------------\n");
             }
 
-            if (turn45 && (std::abs(ave) + std::abs(before) + std::abs(bbefore) / 3) <= 6.0) {
+            double value = std::abs(ave) + std::abs(before) + std::abs(bbefore) / 3.0;
+
+            if (turn45 && value <= 6.0) {
                 stop();
                 return;
             }
@@ -481,91 +479,6 @@ void Robot::turn90(Direction direction) {
             before = ave;
         }
     }
-}
-
-void Robot::goSquareAlongLine(int n) {
-    //決め打ちで400
-    const double target = 400;
-    run(FORWARD, default_speed);
-
-    double before = 0.0;
-    bool over = false;
-    int over_square = 0;
-    for (int i = 0; i < 4000; i++) {
-        auto ys = camera_.getHorizontalLineY();
-        std::vector<double> y_ave;
-        std::vector<int> num;
-        //printf("now itr i = %d\n", i);
-        for (auto y : ys) {
-            if (y_ave.size() == 0) {
-                y_ave.push_back(y);
-                num.push_back(1);
-            } else {
-                bool flag = false;
-                for (unsigned int i = 0; i < y_ave.size(); i++) {
-                    if (y_ave[i] / num[i] - 5 <= y && y <= y_ave[i] / num[i] + 5) {
-                        y_ave[i] += y;
-                        num[i]++;
-                        flag = true;
-                        break;
-                    }
-                }
-                if (!flag) {
-                    y_ave.push_back(y);
-                    num.push_back(1);
-                }
-            }
-        }
-
-        if (y_ave.size() == 0) {
-            printf("空");
-        } else if (y_ave.size() == 1) {
-            before = y_ave[0] / num[0];
-            printf("%15f ", before);
-        } else {
-            for (unsigned int j = 0; j < y_ave.size(); j++) {
-                if (y_ave[j] / num[j] <= before + 3) {
-                    before = y_ave[j] / num[j];
-                    break;
-                }
-            }
-            printf("%15f ", before);
-        }
-        if (before >= 115 * 4) {
-            over = true;
-        }
-        if (over && 30 * 4 <= before && before < 40 * 4) {
-            over = false;
-            over_square++;
-            printf("over_square = %d\n", over_square);
-            if (over_square == n) {
-                stop();
-                return;
-            }
-        }
-
-        //位置ずれ防止
-        double x = camera_.getVerticalLineX();
-        std::cout << "x = " << x << std::endl;
-        if (x < 0) {
-            continue;
-        }
-        while (std::abs(x - target) > 5 * 4) {
-            if (x < target - 5) {
-                curve(LEFT);
-            } else if (x > target + 5) {
-                curve(RIGHT);
-            }
-            x = camera_.getVerticalLineX();
-            if (x < 0) {
-                run(FORWARD);
-                break;
-            }
-        }
-
-        //printf("\n");
-    }
-    stop();
 }
 
 void Robot::goSquare(int n) {
@@ -629,6 +542,23 @@ void Robot::goSquare(int n) {
         }
         double x = camera_.getVerticalLineX();
         std::cout << "x = " << x << std::endl;
+        if (x < 0) {
+            run(FORWARD);
+            continue;
+        }
+        static const int goal_x = 400, margin_x = 20;
+        while (std::abs(x - goal_x) > margin_x) {
+            if (x < goal_x - margin_x) {
+                curve(LEFT);
+            } else if (x > goal_x + margin_x) {
+                curve(RIGHT);
+            }
+            x = camera_.getVerticalLineX();
+            if (x < 0) {
+                run(FORWARD);
+                break;
+            }
+        }
         //printf("\n");
     }
     stop();

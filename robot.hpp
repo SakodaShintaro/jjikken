@@ -74,7 +74,6 @@ public:
 
     void turn90(Direction direction);
     void goSquare(int n);
-    void goSquareAlongLine(int n);
     void backSquare(int n);
 
     void doMove(const Move& move);

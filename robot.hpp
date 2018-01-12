@@ -69,9 +69,6 @@ public:
     void catchAndUp();
     void releaseObject(bool twist);
 
-    void printGrad();
-    void goAlongLine();
-
     void turn90(Direction direction);
     void goSquare(int n);
     void backSquare(int n);

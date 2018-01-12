@@ -4,19 +4,19 @@
 static const int WIDTH = 640;
 static const int HEIGHT = 480;
 
-//Canny
-static const double threshold1 = 90;
-static const double threshold2 = 200;
-static const int apertureSize = 3;
-
-//HoughLinesP
-static const double rho = 1.0;
-static const double theta = CV_PI / 180.0;
-static const int threshold = 40;
-static const double minLineLength = HEIGHT * 0.8;
-static const double maxLineGap = minLineLength / 5;
-
 static std::vector<cv::Vec4i> getLines(const cv::Mat& image) {
+    //Canny
+    static const double threshold1 = 90;
+    static const double threshold2 = 200;
+    static const int apertureSize = 3;
+
+    //HoughLinesP
+    static const double rho = 1.0;
+    static const double theta = CV_PI / 180.0;
+    static const int threshold = 40;
+    static const double minLineLength = HEIGHT * 0.8;
+    static const double maxLineGap = minLineLength / 5;
+
     cv::Mat gray_im, binary_im;
     std::vector<cv::Vec4i> lines;
     cv::cvtColor(image, gray_im, CV_BGR2GRAY);

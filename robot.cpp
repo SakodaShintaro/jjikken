@@ -100,12 +100,9 @@ void Robot::loop() {
         printf("・turnRight\n");
         printf("・turnLeft\n");
         printf("・stop\n");
-        printf("・stopAndTurnRight\n");
-        printf("・stopAndTurnLeft\n");
         printf("・traceHumanFace\n");
         printf("・approachObject\n");
         printf("・showNowView\n");
-        printf("・openFinger\n");
         printf("・closeFinger\n");
         printf("・twistWrist\n");
         printf("・returnWrist\n");
@@ -117,7 +114,6 @@ void Robot::loop() {
         printf("・open\n");
         printf("・twistAndOpen\n");
         printf("・playShogi\n");
-        printf("・getVertivalLineX\n");
         printf("・turnRight90\n");
         printf("・turnLeft90\n");
         printf("・goSquare(n)\n");
@@ -137,10 +133,6 @@ void Robot::loop() {
             run(FORWARD, default_speed);
         } else if (s == "goBack") {
             run(BACK, default_speed);
-        } else if (s == "stopAndTurnRight") {
-            stopAndTurn(RIGHT);
-        } else if (s == "stopAndTurnLeft") {
-            stopAndTurn(LEFT);
         } else if (s == "stop") {
             stop();
         } else if (s == "traceHumanFace") {
@@ -169,8 +161,6 @@ void Robot::loop() {
             printHelp();
         } else if (s == "showNowView") {
             thread_ptr.reset(new std::thread(&Robot::showNowView, this));
-        } else if (s == "openFinger") {
-            arm_.openFinger();
         } else if (s == "closeFinger") {
             arm_.closeFinger();
         } else if (s == "twistWrist") {
@@ -193,10 +183,6 @@ void Robot::loop() {
             releaseObject(true);
         } else if (s == "playShogi") {
             playShogi();
-        } else if (s == "getVerticalLineX") {
-            while (true) {
-                std::cout << camera_.getVerticalLineX() << std::endl;
-            }
         } else if (s == "turnRight90") {
             turn90(RIGHT);
         } else if (s == "turnLeft90") {
@@ -362,14 +348,14 @@ void Robot::turn90(Direction direction) {
 
             double value = std::abs(ave) + std::abs(before) + std::abs(bbefore) / 3.0;
 
-            if (turn45 && value <= 5.0) {
+            if (turn45 && value <= 4.0) {
                 stop();
                 return;
             }
             printf("value = %f\n", value);
 
             if (turn45) {
-                stopAndTurn(direction, std::min(value / 45.0, 1.0));
+                stopAndTurn(direction, std::min(value / 45.0 + 0.1, 1.0));
             }
             bbefore = before;
             before = ave;
@@ -378,6 +364,7 @@ void Robot::turn90(Direction direction) {
 }
 
 void Robot::goSquare(int n) {
+    printf("start goSquare(%d)\n", n);
     run(FORWARD, default_speed);
     double before = 0.0;
     bool over = false;
@@ -409,10 +396,10 @@ void Robot::goSquare(int n) {
         }
 
         if (y_ave.size() == 0) {
-            //printf("空");
+            printf("空\n");
         } else if (y_ave.size() == 1) {
             before = y_ave[0] / num[0];
-            //printf("before = %15f\n", before);
+            printf("before = %15f\n", before);
         } else {
             for (unsigned int j = 0; j < y_ave.size(); j++) {
                 if (y_ave[j] / num[j] <= before + 3) {
@@ -420,16 +407,17 @@ void Robot::goSquare(int n) {
                     break;
                 }
             }
-            //printf("before = %15f\n", before);
+            printf("before = %15f\n", before);
         }
-        if (!over && before >= 115) {
-            //printf("over_on ----------------------------\n");
+        if (!over && before >= 300) {
+            printf("over_on ----------------------------\n");
             over = true;
         }
         static const int goal = 140;
-        static const int margin = 5;
+        static const int margin = 20;
         if (over && goal - margin <= before && before < goal + margin) {
             over = false;
+            printf("over_off----------------------------\n");
             over_square++;
             printf("over_square = %d\n", over_square);
             if (over_square == n) {
@@ -472,35 +460,27 @@ void Robot::goSquare(int n) {
                 continue;
             }
             static const int goal_x = 400, margin_x = 20;
-            //while (std::abs(x - goal_x) > margin_x) {
-                if (x < goal_x - margin_x) {
-                    curve(LEFT);
-                    usleep(5e4);
-                    run(FORWARD);
-                } else if (x > goal_x + margin_x) {
-                    curve(RIGHT);
-                    usleep(5e4);
-                    run(FORWARD);
-                }
-                x = camera_.getVerticalLineX();
-                if (x < 0) {
-                    run(FORWARD);
-                    break;
-                }
-            //}
+            if (x < goal_x - margin_x) {
+                curve(LEFT);
+                usleep(6e4);
+                run(FORWARD);
+            } else if (x > goal_x + margin_x) {
+                curve(RIGHT);
+                usleep(6e4);
+                run(FORWARD);
+            }
         } else {
             if (grad > 0) {
                 curve(RIGHT);
-                usleep(5e4);
+                usleep(6e4);
                 run(FORWARD);
             } else {
                 curve(LEFT);
-                usleep(5e4);
+                usleep(6e4);
                 run(FORWARD);
             }
         }
 
-        //printf("\n");
     }
     stop();
 }
@@ -537,7 +517,7 @@ void Robot::backSquare(int n) {
         }
 
         if (y_ave.size() == 0) {
-            printf("空");
+            printf("空\n");
         } else if (y_ave.size() == 1) {
             before = y_ave[0] / num[0];
             printf("%15f\n", before);
@@ -550,13 +530,15 @@ void Robot::backSquare(int n) {
             }
             printf("%15f\n", before);
         }
-        if (!over && before <= 20) {
+        if (!over && before <= 40) {
+            printf("over_on------------------------------\n");
             over = true;
         }
         static const int goal = 140;
-        static const int margin = 5;
+        static const int margin = 20;
         if (over && goal - margin <= before && before < goal + margin) {
             over = false;
+            printf("over_off-----------------------------\n");
             over_square++;
             printf("over_square = %d\n", over_square);
             if (over_square == n) {
@@ -635,10 +617,10 @@ void Robot::goGoodPosition() {
             break;
         } else if ((p.y + before.y) / 2 < ok - margin) {
             printf("yが小さい\n");
-            run(FORWARD, default_speed / 4);
+            run(FORWARD, default_speed / 8);
         } else {
             printf("yが大きい\n");
-            run(BACK, default_speed / 4);
+            run(BACK, default_speed / 8);
         }
         before = p;
     }

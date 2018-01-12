@@ -31,9 +31,7 @@ public:
     //止まる
     void stop();
 
-    //特定の方向に距離を指定して進む関数が欲しくなりそうな気もする
-
-    //90度,180度方向転換するイメージだけど、角度はどうやって測るのか
+    //方向転換
     void stopAndTurn(Direction direction);
     void stopAndTurn(Direction direction, double p);
     void turn(int speed);
@@ -56,26 +54,33 @@ public:
     //人の顔
     void traceHumanFace();
 
+    //物体に近づく(超音波センサを使う)
     void approachObject();
 
+    //線分認識した結果を表示する(デバッグ用)
     void showNowView() {
         camera_.show();
     }
 
+    //将棋指す(これがアプリケーション)
     void playShogi();
 
+    //物を掴む.離す
     void catchObject();
     void prepareForCatch();
     void catchAndUp();
     void releaseObject(bool twist);
 
+    //床のマスに沿って進む
     void turn90(Direction direction);
     void goSquare(int n);
     void backSquare(int n);
 
-    void doMove(const Move& move);
-
+    //駒を画像認識して掴める位置に移動する(前後方向のみ)
     void goGoodPosition();
+
+    //将棋盤の内部状態を一手動かす
+    void doMove(const Move& move);
 
 private:
     //(1)出力類
@@ -92,17 +97,15 @@ private:
 
     //(2)入力類
     //(2)-a カメラ
-    //openCVを使うはず
     Camera camera_;
 
     //(2)-b マイク
+    ///カメラについてる
+    ///しかし間に合わなかった……
 
     //(2)-c センサ類
-    //超音波距離センサ?
+    //超音波距離センサ
     DistanceSensor ds_;
-
-    //今何かアプリケーションを実行中かどうか
-    bool is_running_;
 
     //今何かアプリケーションを実行中だとして、それを中断するシグナル
     bool stop_signal_;

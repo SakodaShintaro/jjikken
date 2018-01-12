@@ -463,9 +463,13 @@ void Robot::goSquare(int n) {
             if (x < goal_x - margin_x) {
                 curve(LEFT);
                 usleep(6e4);
+                curve(RIGHT);
+                usleep(6e4);
                 run(FORWARD);
             } else if (x > goal_x + margin_x) {
                 curve(RIGHT);
+                usleep(6e4);
+                curve(LEFT);
                 usleep(6e4);
                 run(FORWARD);
             }

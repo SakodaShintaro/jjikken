@@ -123,7 +123,7 @@ static Move stringToMove(std::string input) {
         from = FRToSquare[input[0] - '0'][input[1] - 'a' + 1];
         to = FRToSquare[input[2] - '0'][input[3] - 'a' + 1];
         isDrop = false;
-        if (input.size() == 5 && input[4] == '+') isPromote = true;
+        if (input.size() >= 5 && input[4] == '+') isPromote = true;
         else isPromote = false;
         return fullMove(to, from, isDrop, isPromote, EMPTY, EMPTY);
     }

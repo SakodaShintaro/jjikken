@@ -35,6 +35,7 @@ public:
 
     //90度,180度方向転換するイメージだけど、角度はどうやって測るのか
     void stopAndTurn(Direction direction);
+    void stopAndTurn(Direction direction, double p);
     void turn(int speed);
     
     //前に進んでいる状態で呼び出す想定
@@ -70,7 +71,6 @@ public:
 
     void printGrad();
     void goAlongLine();
-    void goAlongVerticalLine();
 
     void turn90(Direction direction);
     void goSquare(int n);
